@@ -1,6 +1,6 @@
 from collections import defaultdict
 import tomllib
-from seeder.models import ColumnConfig, SeederRequest
+from seeder.models import ColumnConfig, SeederRequest, Config
 
 
 def _get_subtree_items(dict: defaultdict[dict], key: str) -> defaultdict[dict]:
@@ -19,7 +19,7 @@ def _parse_column_overrides(table_config: dict) -> defaultdict[str, ColumnConfig
     )
 
 
-def load_config(path: str) -> dict:
+def load_config(path: str) -> Config:
     """Parse and validate the config file."""
     with open(path, "rb") as f:
         raw = tomllib.load(f)
