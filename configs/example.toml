@@ -1,0 +1,15 @@
+[tables.users]
+rows = 100
+
+[tables.users.columns.email]
+generator = "email"
+
+[tables.users.columns.age]
+min = 18
+max = 65
+
+[tables.orders]
+rows = 500
+
+[tables.orders.columns.status]
+values = ["pending", "shipped", "delivered", "cancelled"]
