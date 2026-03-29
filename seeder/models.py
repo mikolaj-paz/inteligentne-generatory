@@ -29,6 +29,9 @@ class TableInfo:
     columns: list[ColumnInfo] = field(default_factory=list)
 
 
+Schema = list[TableInfo]
+
+
 @dataclass
 class ColumnConfig:
     generator: Optional[str] = None
@@ -44,3 +47,6 @@ class SeederRequest:
     column_overrides: defaultdict[str, ColumnConfig] = field(
         default_factory=lambda: defaultdict(ColumnConfig)
     )
+
+
+Config = list[SeederRequest]
