@@ -1,6 +1,6 @@
 import sys
 import click
-import pymysql
+import sqlite3
 
 from seeder.config.loader import load_config
 from seeder.core.connection import get_connection
@@ -18,17 +18,22 @@ from seeder.models import Config, Schema
     help="Path to TOML configuration file.",
 )
 @click.option(
+    "--db-path",
+    default=":memory:",
+    help="Path to the SQLite database file (default: in-memory).",
+)
+@click.option(
     "--dry-run",
     is_flag=True,
     default=False,
     help="Preview what would be seeded without writing to the database.",
 )
-def main(config_path, dry_run) -> None:
+def main(config_path, db_path, dry_run) -> None:
     requests = load_config(config_path)
 
     try:
-        connection = get_connection()
-    except pymysql.Error as e:
+        connection = get_connection(db_path)
+    except sqlite3.Error as e:
         click.echo(f"Failed to connect to the database: {e}", err=True)
         sys.exit(1)
 
@@ -55,7 +60,7 @@ def _validate_requests(requests: Config, schema: Schema) -> None:
 
 
 def _print_dry_run(requests: Config) -> None:
-    click.echo("Dry run\n")
+    click.echo("The following data would be seeded:")
     for request in requests:
         click.echo(f"\t{request.table_name}: {request.row_count} rows")
         for column_name, column_config in request.column_overrides.items():

@@ -13,7 +13,7 @@ def generate_value(
         return None
 
     if column_override and column_override.generator:
-        return BaseGenerator.get(column_override.generator).generate()
+        return BaseGenerator.get(column_override.generator)().generate()
 
     gen = BaseGenerator.get(column_info.data_type)
     return gen.generate(

@@ -3,8 +3,8 @@ import tomllib
 from seeder.models import ColumnConfig, SeederRequest, Config
 
 
-def _get_subtree_items(dict: defaultdict[dict], key: str) -> defaultdict[dict]:
-    return dict.get(key, defaultdict(dict)).items()
+def _get_subtree_items(data: defaultdict[dict], key: str) -> defaultdict[dict]:
+    return data.get(key).items()
 
 
 def _parse_column_overrides(table_config: dict) -> defaultdict[str, ColumnConfig]:

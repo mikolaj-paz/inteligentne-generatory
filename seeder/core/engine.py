@@ -1,14 +1,13 @@
 from collections import defaultdict
+import sqlite3
 
-import pymysql
-import pymysql.cursors
 from tqdm import tqdm
 
 from seeder.generation.generators import generate_value
 from seeder.models import Schema, Config, SeederRequest, TableInfo
 
 
-def run(connection: pymysql.Connection, schema: Schema, config: Config) -> None:
+def run(connection: sqlite3.Connection, schema: Schema, config: Config) -> None:
     """Main seeding loop - generate and insert data based on schema and config."""
     schema_map = {table.name: table for table in schema}
     sorted_requests = _sort_by_dependencies(config, schema_map)
@@ -19,7 +18,7 @@ def run(connection: pymysql.Connection, schema: Schema, config: Config) -> None:
 
 
 def _seed_table(
-    connection: pymysql.Connection,
+    connection: sqlite3.Connection,
     table_info: TableInfo,
     request: SeederRequest,
 ):
@@ -27,7 +26,7 @@ def _seed_table(
 
 
 def resolve_foreign_key(
-    connection: pymysql.Connection,
+    connection: sqlite3.Connection,
     column,
     foreign_key_cache: defaultdict[str, list],
 ) -> object:

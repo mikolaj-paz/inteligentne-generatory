@@ -1,31 +1,29 @@
-import pymysql
+import sqlite3
 
 from seeder.models import ColumnInfo, ForeignKeyInfo, TableInfo
 
 
-def _fetch_tables(connection: pymysql.Connection, database: str) -> list[TableInfo]:
+def _fetch_tables(connection: sqlite3.Connection) -> list[TableInfo]:
     pass
 
 
-def _fetch_columns(
-    connection: pymysql.Connection, database: str, table_name: str
-) -> list[ColumnInfo]:
+def _fetch_columns(connection: sqlite3.Connection, table_name: str) -> list[ColumnInfo]:
     pass
 
 
 def _fetch_foreign_keys(
-    connection: pymysql.Connection, database: str, table_name: str
-) -> list[ForeignKeyInfo]:
+    connection: sqlite3.Connection, table_name: str
+) -> dict[str, ForeignKeyInfo]:
     pass
 
 
-def fetch_schema(connection: pymysql.Connection, database: str) -> dict:
+def fetch_schema(connection: sqlite3.Connection) -> list[TableInfo]:
     """Query INFORMATION_SCHEMA and return table/column metadata."""
-    tables = _fetch_tables(connection, database)
+    tables = _fetch_tables(connection)
 
     for table in tables:
-        table.columns = _fetch_columns(connection, database, table.name)
-        foreign_keys = _fetch_foreign_keys(connection, database, table.name)
+        table.columns = _fetch_columns(connection, table.name)
+        foreign_keys = _fetch_foreign_keys(connection, table.name)
 
         for column in table.columns:
             if column.name in foreign_keys:
