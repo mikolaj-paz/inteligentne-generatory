@@ -1,1 +1,1 @@
-from seeder.generation.types import nip, nrb, regon, pesel  # noqa: F401
+from seeder.generation.types import nip, nrb, regon, pesel, account_number  # noqa: F401

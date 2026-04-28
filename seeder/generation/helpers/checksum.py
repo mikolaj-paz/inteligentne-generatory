@@ -8,16 +8,14 @@ def mod11_weighted(digits: str, weights: Sequence[int]) -> int:
     return sum(digit * weight for digit, weight in zip(map(int, digits), weights)) % 11
 
 
-def mod97_iban(bban: str, country_code: str = "PL") -> str:
+def mod97_nrb(bban: str) -> str:
     cleaned_bban = bban.replace(" ", "")
     if not cleaned_bban.isdigit():
         raise ValueError("BBAN must contain only digits")
+    if len(cleaned_bban) != 24:
+        raise ValueError("Polish BBAN must be exactly 24 digits")
 
-    cc = country_code.upper()
-    if len(cc) != 2 or not cc.isalpha():
-        raise ValueError("Country code must be two letters")
-
-    rearranged = f"{cleaned_bban}{cc}00"
+    rearranged = f"{cleaned_bban}PL00"
     numeric = "".join(str(ord(ch) - 55) if ch.isalpha() else ch for ch in rearranged)
 
     remainder = 0
