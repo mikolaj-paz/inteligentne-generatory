@@ -6,6 +6,7 @@ from seeder.config.loader import load_config
 from seeder.core.connection import get_connection
 from seeder.core.resolver import resolve_tables
 from seeder.core.schema import create_schema
+from seeder.generation.generators import generate_value
 from seeder.models import Config, Schema
 
 
@@ -51,7 +52,43 @@ def main(config_path, db_path, dry_run) -> None:
         _validate_requests(requests, resolved_schema)
 
         click.echo("Database schema creation completed.")
-        click.echo("Data seeding is not implemented yet.")
+        # click.echo("Data seeding is not implemented yet.")
+
+        click.echo("Database schema creation completed.")
+
+        click.echo("Seeding data...")
+
+        for table in resolved_schema:
+            request = next((r for r in requests if r.table_name == table.name), None)
+
+            if not request or request.row_count == 0:
+                continue
+
+            click.echo(f"  Generating {request.row_count} rows for table '{table.name}'...")
+
+            for _ in range(request.row_count):
+                row_data = {}
+                row_context = {}
+
+                for column in table.columns:
+                    override = request.column_overrides.get(column.name)
+                    val = generate_value(column, override) #add row_context
+                    row_data[column.name] = val
+
+                    if override and override.generator == "plec":
+                        row_context['gender'] = val
+                    if override and override.generator == "data_zatrudnienia":
+                        row_context['data_zatrudnienia'] = val
+
+                columns_names = ", ".join(row_data.keys())
+                placeholders = ", ".join(["?" for _ in row_data])
+                sql = f"INSERT INTO {table.name} ({columns_names}) VALUES ({placeholders})"
+
+                connection.execute(sql, list(row_data.values()))
+
+        connection.commit()
+        click.echo("Data seeding completed successfully!")
+
     except (ValueError, RuntimeError, sqlite3.Error) as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)

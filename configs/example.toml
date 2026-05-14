@@ -2,11 +2,12 @@
 rows = 25
 fields = ["nazwa", "regon", "nip"]
 
+[Firma.columns.nazwa]
+generator = "nazwa_firmy"
+
 [Firma.columns.nip]
 generator = "nip"
 
 [Firma.columns.regon]
 generator = "regon"
 
-[Powiat]
-rows = 100
