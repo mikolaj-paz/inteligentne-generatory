@@ -1,0 +1,69 @@
+from seeder.models import ColumnInfo, ForeignKeyInfo, Schema, TableInfo
+
+ADDRESSING_TABLES: Schema = [
+    TableInfo(
+        name="Ulica",
+        columns=[
+            ColumnInfo(
+                name="id_ulica",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=True,
+                is_auto_increment=True,
+            ),
+            ColumnInfo(
+                name="nazwa",
+                data_type="TEXT",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="id_miejscowosc",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+                foreign_key=ForeignKeyInfo(
+                    referenced_table="Miejscowosc", referenced_column="id_miejscowosc"
+                ),
+            ),
+        ],
+    ),
+    TableInfo(
+        name="Adres",
+        columns=[
+            ColumnInfo(
+                name="id_adres",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=True,
+                is_auto_increment=True,
+            ),
+            ColumnInfo(
+                name="id_ulica",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+                foreign_key=ForeignKeyInfo(
+                    referenced_table="Ulica", referenced_column="id_ulica"
+                ),
+            ),
+            ColumnInfo(
+                name="numer_domu",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="numer_mieszkania",
+                data_type="INTEGER",
+                is_nullable=True,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+        ],
+    ),
+]

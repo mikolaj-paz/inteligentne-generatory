@@ -44,6 +44,7 @@ class ColumnConfig:
 class SeederRequest:
     table_name: str
     row_count: int
+    fields: Optional[list[str]] = None
     column_overrides: defaultdict[str, ColumnConfig] = field(
         default_factory=lambda: defaultdict(ColumnConfig)
     )

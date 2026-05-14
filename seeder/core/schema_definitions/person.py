@@ -1,0 +1,61 @@
+from seeder.models import ColumnInfo, ForeignKeyInfo, Schema, TableInfo
+
+PEOPLE_TABLES: Schema = [
+    TableInfo(
+        name="Osoba",
+        columns=[
+            ColumnInfo(
+                name="id_osoba",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=True,
+                is_auto_increment=True,
+            ),
+            ColumnInfo(
+                name="imie",
+                data_type="TEXT",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="nazwisko",
+                data_type="TEXT",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="pesel",
+                data_type="TEXT",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="data_urodzenia",
+                data_type="TEXT",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="plec",
+                data_type="TEXT",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="id_adres",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+                foreign_key=ForeignKeyInfo(
+                    referenced_table="Adres", referenced_column="id_adres"
+                ),
+            ),
+        ],
+    ),
+]

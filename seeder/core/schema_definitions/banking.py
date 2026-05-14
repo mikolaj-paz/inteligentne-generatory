@@ -1,0 +1,86 @@
+from seeder.models import ColumnInfo, ForeignKeyInfo, Schema, TableInfo
+
+BANKING_TABLES: Schema = [
+    TableInfo(
+        name="Bank",
+        columns=[
+            ColumnInfo(
+                name="id_bank",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=True,
+                is_auto_increment=True,
+            ),
+            ColumnInfo(
+                name="nazwa",
+                data_type="TEXT",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="nrb",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="id_adres",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+                foreign_key=ForeignKeyInfo(
+                    referenced_table="Adres", referenced_column="id_adres"
+                ),
+            ),
+        ],
+    ),
+    TableInfo(
+        name="Konto",
+        columns=[
+            ColumnInfo(
+                name="id_konto",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=True,
+                is_auto_increment=True,
+            ),
+            ColumnInfo(
+                name="id_osoba",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+                foreign_key=ForeignKeyInfo(
+                    referenced_table="Osoba", referenced_column="id_osoba"
+                ),
+            ),
+            ColumnInfo(
+                name="id_bank",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+                foreign_key=ForeignKeyInfo(
+                    referenced_table="Bank", referenced_column="id_bank"
+                ),
+            ),
+            ColumnInfo(
+                name="numer_konta",
+                data_type="INTEGER",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+            ColumnInfo(
+                name="saldo",
+                data_type="REAL",
+                is_nullable=False,
+                is_primary_key=False,
+                is_auto_increment=False,
+            ),
+        ],
+    ),
+]

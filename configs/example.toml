@@ -1,15 +1,12 @@
-[tables.users]
+[Firma]
+rows = 25
+fields = ["nazwa", "regon", "nip"]
+
+[Firma.columns.nip]
+generator = "nip"
+
+[Firma.columns.regon]
+generator = "regon"
+
+[Powiat]
 rows = 100
-
-[tables.users.columns.email]
-generator = "email"
-
-[tables.users.columns.age]
-min = 18
-max = 65
-
-[tables.orders]
-rows = 500
-
-[tables.orders.columns.status]
-values = ["pending", "shipped", "delivered", "cancelled"]
