@@ -1,10 +1,8 @@
 import os
 import sqlite3
 
-current_file_path = os.path.abspath(__file__)
-project_name = "inteligentne-generatory"
-base_path = current_file_path.split(project_name)[0]
-PROJECT_ROOT = os.path.join(base_path, project_name)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(current_dir, "../../.."))
 DICT_DB_PATH = os.path.join(PROJECT_ROOT, "databases", "dictionary.db")
 
 def fetch_random_from_dict(table: str, column: str):
