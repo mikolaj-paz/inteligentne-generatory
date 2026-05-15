@@ -24,9 +24,11 @@ def process_personal_data(conn):
             if "imiona" in filename:
                 df = df[["IMIĘ_PIERWSZE", "LICZBA_WYSTĄPIEŃ"]]
                 df.columns = ["imie", "liczba"]
+                df = df.head(240)
             elif "nazwiska" in filename:
                 df = df[["Nazwisko aktualne", "Liczba"]]
                 df.columns = ["nazwisko", "liczba"]
+                df = df.head(23300)
 
             df.to_sql(table, conn, if_exists="replace", index=False)
 
