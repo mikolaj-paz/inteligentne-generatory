@@ -52,9 +52,6 @@ def main(config_path, db_path, dry_run) -> None:
         _validate_requests(requests, resolved_schema)
 
         click.echo("Database schema creation completed.")
-        # click.echo("Data seeding is not implemented yet.")
-
-        click.echo("Database schema creation completed.")
 
         click.echo("Seeding data...")
 
@@ -72,13 +69,8 @@ def main(config_path, db_path, dry_run) -> None:
 
                 for column in table.columns:
                     override = request.column_overrides.get(column.name)
-                    val = generate_value(column, override) #add row_context
+                    val = generate_value(column, override, row_context)
                     row_data[column.name] = val
-
-                    if override and override.generator == "plec":
-                        row_context['gender'] = val
-                    if override and override.generator == "data_zatrudnienia":
-                        row_context['data_zatrudnienia'] = val
 
                 columns_names = ", ".join(row_data.keys())
                 placeholders = ", ".join(["?" for _ in row_data])

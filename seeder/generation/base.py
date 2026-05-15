@@ -11,7 +11,7 @@ class BaseGenerator(ABC):
             _REGISTRY[cls.name] = cls
 
     @abstractmethod
-    def generate(self, **kwargs) -> object:
+    def generate(self, context: dict = None, **kwargs: object) -> object:
         """Generate and return single value."""
         ...
 

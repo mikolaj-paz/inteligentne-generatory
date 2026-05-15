@@ -16,7 +16,7 @@ class NipGenerator(BaseGenerator):
         return str(random.randint(10, 99) * 10 + random.randint(1, 9))
 
     @override
-    def generate(self) -> str:
+    def generate(self, context: dict = None, **kwargs) -> str:
         """Generate a random 10-digit NIP (Polish tax identification number)."""
 
         while True:

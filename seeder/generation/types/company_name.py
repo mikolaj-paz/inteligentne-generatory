@@ -8,7 +8,7 @@ class CompanyNameGenerator(BaseGenerator):
     name = "nazwa_firmy"
 
     @override
-    def generate(self, **kwargs) -> str:
+    def generate(self, context: dict = None, **kwargs) -> str:
         base = fetch_random_from_dict("NazwiskaMeskie", "nazwisko")
 
         structures = [

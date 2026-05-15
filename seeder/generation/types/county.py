@@ -6,5 +6,5 @@ class CountyGenerator(BaseGenerator):
     name = "powiat"
 
     @override
-    def generate(self, **kwargs) -> str:
+    def generate(self, context: dict = None, **kwargs) -> str:
         return str(fetch_random_from_dict("Powiat", "Nazwa"))

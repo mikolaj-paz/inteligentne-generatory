@@ -13,7 +13,7 @@ class AccountNumberGenerator(BaseGenerator):
         return mod97_nrb(account_number)
 
     @override
-    def generate(self) -> str:
+    def generate(self, context: dict = None, **kwargs) -> str:
         """Generate a random 26-digit bank account number (numer rachunku)."""
         nrb_gen = NrbGenerator()
         nrb = nrb_gen.generate()

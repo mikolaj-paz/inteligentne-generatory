@@ -5,7 +5,7 @@ from typing import Optional
 
 
 def generate_value(
-    column_info: ColumnInfo, column_override: Optional[ColumnConfig]
+    column_info: ColumnInfo, column_override: Optional[ColumnConfig], row_context: dict
 ) -> object:
     """Return a generated value based on column type and user config."""
 
@@ -13,10 +13,12 @@ def generate_value(
         return None
 
     if column_override and column_override.generator:
-        return BaseGenerator.get(column_override.generator)().generate()
+        gen_class = BaseGenerator.get(column_override.generator)
+        return gen_class().generate(row_context)
 
     gen = BaseGenerator.get(column_info.data_type)
-    return gen.generate(
+    return gen().generate(
+        row_context=row_context,
         length=column_info.character_maximum_length,
         numeric_precision=column_info.numeric_precision,
         numeric_scale=column_info.numeric_scale,

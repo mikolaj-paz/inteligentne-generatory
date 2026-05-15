@@ -1,5 +1,5 @@
 from seeder.generation.types import (nip, nrb, regon, pesel, account_number, first_name, last_name,
-                                     voivodeship, county, municipality, locality, gender, company_name)
+                                     voivodeship, county, municipality, locality, gender, company_name, birth_date)
 
 __all__ = [
     "nip",
@@ -15,4 +15,5 @@ __all__ = [
     "locality",
     "gender",
     "company_name",
+    "birth_date",
 ]

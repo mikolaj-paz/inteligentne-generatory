@@ -33,16 +33,12 @@ class PeselGenerator(BaseGenerator):
         )
         return (10 - weighted_sum % 10) % 10
 
-    def _generate_birth_date_part(self, year_from: int, year_to: int) -> str:
-        """Generate the birth date part of the PESEL number."""
+    def _generate_birth_date_part(self, birth_date: datetime) -> str:
+        """Generate the birthdate part of the PESEL number."""
 
-        start_date = datetime(year_from, 1, 1)
-        end_date = datetime(year_to, 12, 31)
-        random_date = start_date + (end_date - start_date) * random.random()
-
-        year = random_date.year % 100
-        month = random_date.month + _CENTURY_MONTH_OFFSETS[random_date.year // 100]
-        day = random_date.day
+        year = birth_date.year % 100
+        month = birth_date.month + _CENTURY_MONTH_OFFSETS[birth_date.year // 100]
+        day = birth_date.day
 
         return f"{year:02d}{month:02d}{day:02d}"
 
@@ -61,16 +57,33 @@ class PeselGenerator(BaseGenerator):
 
     @override
     def generate(
-        self, year_from: int = 1950, year_to: int = 2005, gender: Gender = "F"
+        self, context: dict = None, year_from: int = 1950, year_to: int = 2005,  **kwargs
     ) -> str:
         """Generate a random 11-digit PESEL (Polish national identification number)."""
 
-        birth_date = self._generate_birth_date_part(year_from, year_to)
-        gender_digit = self._generate_gender_digit(gender)
+        ctx = context if context is not None else {}
+
+        gender_val = ctx.get('gender')
+        if not gender_val:
+            gender_enum = random.choice([Gender.MALE, Gender.FEMALE])
+            ctx['gender'] = gender_enum.value
+        else:
+            gender_enum = Gender.MALE if str(gender_val).upper() in ["M", "MALE"] else Gender.FEMALE
+
+        birth_date_obj = ctx.get('birth_date')
+
+        if not birth_date_obj:
+            start_date = datetime(year_from, 1, 1)
+            end_date = datetime(year_to, 12, 31)
+            birth_date_obj = start_date + (end_date - start_date) * random.random()
+            ctx['birth_date'] = birth_date_obj.date()
+
+        birth_date_part = self._generate_birth_date_part(birth_date_obj)
+        gender_digit = self._generate_gender_digit(gender_enum)
 
         while True:
             serial_number = f"{random.randint(0, 999):03d}"
-            without_checksum = birth_date + serial_number + gender_digit
+            without_checksum = birth_date_part + serial_number + gender_digit
 
             checksum = self._generate_checksum(without_checksum)
 

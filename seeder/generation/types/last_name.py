@@ -8,11 +8,15 @@ class LastNameGenerator(BaseGenerator):
     name = "nazwisko"
 
     @override
-    def generate(self, **kwargs) -> str:
-        gender = kwargs.get('gender')
+    def generate(self, context: dict = None, **kwargs) -> str:
+        ctx = context if context is not None else {}
+
+        gender = ctx.get('gender')
 
         if not gender:
             gender = random.choice(['M', 'F'])
+            ctx['gender'] = gender
 
         table = "NazwiskaMeskie" if gender == 'M' else "NazwiskaZenskie"
+
         return str(fetch_random_from_dict(table, "nazwisko"))

@@ -6,5 +6,5 @@ class LocalityGenerator(BaseGenerator):
     name = "miejscowosc"
 
     @override
-    def generate(self, **kwargs) -> str:
+    def generate(self, context: dict = None, **kwargs) -> str:
         return str(fetch_random_from_dict("Miejscowosc", "Nazwa"))
