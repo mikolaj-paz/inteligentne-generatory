@@ -11,7 +11,10 @@ class RegonGenerator(BaseGenerator):
     name = "regon"
 
     @override
-    def generate(self, context: dict = None,) -> str:
+    def generate(
+        self,
+        context: dict = None,
+    ) -> str:
         """Generate a random 9-digit REGON (Polish business identification number)."""
 
         regon = "".join(str(random.randint(0, 9)) for _ in range(8))

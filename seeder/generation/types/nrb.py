@@ -38,7 +38,12 @@ class NrbGenerator(BaseGenerator):
         return str((10 - (weighted_sum % 10)) % 10)
 
     @override
-    def generate(self, bank_code_to_name: dict[int, str] = BANK_CODE_TO_NAME, context: dict = None, **kwargs) -> str:
+    def generate(
+        self,
+        bank_code_to_name: dict[int, str] = BANK_CODE_TO_NAME,
+        context: dict = None,
+        **kwargs
+    ) -> str:
         """Generate a random 8-digit NRB (Polish bank number)."""
         nrb_without_checksum = (
             self._institution_code(bank_code_to_name) + self._department_code()

@@ -57,26 +57,30 @@ class PeselGenerator(BaseGenerator):
 
     @override
     def generate(
-        self, context: dict = None, year_from: int = 1950, year_to: int = 2005,  **kwargs
+        self, context: dict = None, year_from: int = 1950, year_to: int = 2005, **kwargs
     ) -> str:
         """Generate a random 11-digit PESEL (Polish national identification number)."""
 
         ctx = context if context is not None else {}
 
-        gender_val = ctx.get('gender')
+        gender_val = ctx.get("gender")
         if not gender_val:
             gender_enum = random.choice([Gender.MALE, Gender.FEMALE])
-            ctx['gender'] = gender_enum.value
+            ctx["gender"] = gender_enum.value
         else:
-            gender_enum = Gender.MALE if str(gender_val).upper() in ["M", "MALE"] else Gender.FEMALE
+            gender_enum = (
+                Gender.MALE
+                if str(gender_val).upper() in ["M", "MALE"]
+                else Gender.FEMALE
+            )
 
-        birth_date_obj = ctx.get('birth_date')
+        birth_date_obj = ctx.get("birth_date")
 
         if not birth_date_obj:
             start_date = datetime(year_from, 1, 1)
             end_date = datetime(year_to, 12, 31)
             birth_date_obj = start_date + (end_date - start_date) * random.random()
-            ctx['birth_date'] = birth_date_obj.date()
+            ctx["birth_date"] = birth_date_obj.date()
 
         birth_date_part = self._generate_birth_date_part(birth_date_obj)
         gender_digit = self._generate_gender_digit(gender_enum)

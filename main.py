@@ -61,7 +61,9 @@ def main(config_path, db_path, dry_run) -> None:
             if not request or request.row_count == 0:
                 continue
 
-            click.echo(f"  Generating {request.row_count} rows for table '{table.name}'...")
+            click.echo(
+                f"  Generating {request.row_count} rows for table '{table.name}'..."
+            )
 
             for _ in range(request.row_count):
                 row_data = {}
@@ -69,7 +71,7 @@ def main(config_path, db_path, dry_run) -> None:
 
                 for column in table.columns:
                     override = request.column_overrides.get(column.name)
-                    val = generate_value(column, override, row_context)
+                    val = generate_value(column, override, row_context, table.name)
                     row_data[column.name] = val
 
                 columns_names = ", ".join(row_data.keys())

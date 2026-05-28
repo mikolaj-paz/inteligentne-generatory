@@ -1,5 +1,19 @@
-from seeder.generation.types import (nip, nrb, regon, pesel, account_number, first_name, last_name,
-                                     voivodeship, county, municipality, locality, gender, company_name, birth_date)
+from seeder.generation.types import (
+    nip,
+    nrb,
+    regon,
+    pesel,
+    account_number,
+    first_name,
+    last_name,
+    voivodeship,
+    county,
+    municipality,
+    locality,
+    gender,
+    company_name,
+    birth_date,
+)
 
 __all__ = [
     "nip",

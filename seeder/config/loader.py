@@ -1,7 +1,8 @@
 from collections import defaultdict
-from collections.abc import Mapping
 import tomllib
 from seeder.models import ColumnConfig, SeederRequest, Config
+
+_KNOWN_COLUMN_KEYS = {"generator"}
 
 
 def _parse_fields(table_name: str, table_config: dict) -> list[str] | None:
@@ -29,13 +30,19 @@ def _parse_column_overrides(table_config: dict) -> defaultdict[str, ColumnConfig
     if not isinstance(columns, dict):
         raise ValueError("Each table 'columns' section must be a dictionary")
 
-    return defaultdict(
-        ColumnConfig,
-        {
-            column_name: ColumnConfig(**column_config)
-            for column_name, column_config in columns.items()
-        },
-    )
+    result = {}
+    for column_name, column_config in columns.items():
+        if not isinstance(column_config, dict):
+            raise ValueError(f"Column '{column_name}' configuration must be a section")
+
+        generator = column_config.get("generator")
+        if generator is not None and not isinstance(generator, str):
+            raise ValueError(f"Column '{column_name}' 'generator' must be a string")
+
+        params = {k: v for k, v in column_config.items() if k not in _KNOWN_COLUMN_KEYS}
+        result[column_name] = ColumnConfig(generator=generator, params=params)
+
+    return defaultdict(ColumnConfig, result)
 
 
 def load_config(path: str) -> Config:

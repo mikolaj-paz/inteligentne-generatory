@@ -7,7 +7,7 @@ from seeder.generation.helpers.checksum import mod97_nrb
 
 
 class AccountNumberGenerator(BaseGenerator):
-    name = "account_number"
+    name = "numer_konta"
 
     def _checksum(self, account_number: str) -> str:
         return mod97_nrb(account_number)

@@ -19,7 +19,7 @@ class CompanyNameGenerator(BaseGenerator):
             f"{base} Sp. z o.o.",
             f"Przedsiębiorstwo {base}",
             f"Bud-Max {base}",
-            f"Trans-{base}"
+            f"Trans-{base}",
         ]
 
         return random.choice(structures)

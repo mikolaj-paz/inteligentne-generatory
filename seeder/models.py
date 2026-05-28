@@ -35,9 +35,7 @@ Schema = list[TableInfo]
 @dataclass
 class ColumnConfig:
     generator: Optional[str] = None
-    min: Optional[int | float] = None
-    max: Optional[int | float] = None
-    values: Optional[list] = None
+    params: dict = field(default_factory=dict)
 
 
 @dataclass
