@@ -65,6 +65,10 @@ class PeselGenerator(BaseGenerator):
 
         ctx = context if context is not None else {}
 
+        if "used_pesels" not in ctx:
+            ctx["used_pesels"] = set()
+        used_pesels = ctx["used_pesels"]
+
         gender_str = resolve_gender(ctx)
         gender_enum = Gender.MALE if gender_str == "M" else Gender.FEMALE
 
@@ -81,5 +85,7 @@ class PeselGenerator(BaseGenerator):
 
             checksum = self._generate_checksum(without_checksum)
 
-            # TODO Ensure PESEL is unique in database
-            return without_checksum + str(checksum)
+            full_pesel = without_checksum + str(checksum)
+            if full_pesel not in used_pesels:
+                used_pesels.add(full_pesel)
+                return full_pesel

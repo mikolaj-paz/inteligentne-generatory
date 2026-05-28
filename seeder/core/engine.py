@@ -29,10 +29,15 @@ def _seed_table(
     request: SeederRequest | None,
     pk_cache: defaultdict[str, list],
 ) -> None:
+    table_context = {
+        "used_pesels": set()
+    }
     with tqdm(total=row_count, desc=table_info.name, unit="row") as pbar:
         for _ in range(row_count):
             row_data = {}
-            row_context = {}
+            row_context = {
+                "used_pesels": table_context["used_pesels"]
+            }
 
             for column in table_info.columns:
                 if column.foreign_key is not None:
