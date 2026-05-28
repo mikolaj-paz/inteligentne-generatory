@@ -9,19 +9,24 @@ class PositionGenerator(BaseGenerator):
     @override
     def generate(self, context: dict = None, **kwargs) -> str:
         positions = [
-            "Lekarz internista", "Lekarz rezydent", "Lekarz pediatra",
-            "Dentysta / Stomatolog", "Chirurg szczękowy", "Lekarz weterynarii",
-            "Pielęgniarka oddziałowa", "Fizjoterapeuta", "Ratownik medyczny",
-
-            "Nauczyciel mianowany", "Nauczyciel dyplomowany", "Wychowawca świetlicy",
-            "Wykładowca akademicki", "Profesor uczelni", "Asystent naukowo-dydaktyczny",
-
-            "Młodszy programista (Junior Python Developer)", "Starszy programista",
-            "Analityk danych", "Kierownik projektu (Project Manager)",
-            "Specjalista ds. HR", "Główna księgowa", "Przedstawiciel handlowy",
-            "Dyrektor finansowy", "Recepcjonista / Asystent biura",
-
-            "Kierownik magazynu", "Pracownik logistyki", "Kurier",
-            "Sprzedawca / Doradca klienta", "Kierownik sklepu", "Szef kuchni"
+            "Dyrektor Generalny (CEO)",
+            "Dyrektor Operacyjny",
+            "Dyrektor Finansowy",
+            "Dyrektor ds. Marketingu",
+            "Kierownik Działu HR",
+            "Specjalista ds. Rekrutacji",
+            "Główna Księgowa",
+            "Młodszy Księgowy",
+            "Kierownik Projektu (Project Manager)",
+            "Kierownik Działu Sprzedaży",
+            "Specjalista ds. Obsługi Klienta",
+            "Przedstawiciel Handlowy",
+            "Kierownik Administracji",
+            "Asystent Zarządu / Recepcjonista",
+            "Specjalista ds. Zaopatrzenia",
+            "Koordynator ds. Logistyki",
+            "Radca Prawny / Doradca",
+            "Praktykant / Stażysta"
         ]
+
         return random.choice(positions)
