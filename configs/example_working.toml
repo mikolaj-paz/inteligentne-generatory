@@ -6,7 +6,7 @@ rows = 20
 fields = ["nazwa", "regon", "nip"]
 
 [Osoba]
-rows = 50
+rows = 50000
 fields = ["imie", "nazwisko", "data_urodzenia", "pesel", "plec"]
 
 [Zatrudnienie]
