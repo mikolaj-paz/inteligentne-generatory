@@ -41,28 +41,29 @@ def process_personal_data(conn):
 def process_teryt(conn):
     terc_path = os.path.join(SOURCE_DATA_DIR, "TERC.csv")
     simc_path = os.path.join(SOURCE_DATA_DIR, "SIMC.csv")
+    ulic_path = os.path.join(SOURCE_DATA_DIR, "ULIC.csv")
 
     if not os.path.exists(terc_path) or not os.path.exists(simc_path):
         raise FileNotFoundError("Brak plików TERC.csv lub SIMC.csv w data/source!")
 
-    # TERC
+    # 1. TERC
     df_terc = pd.read_csv(terc_path, sep=";", dtype=str)
 
-    # 1. WOJEWÓDZTWO
+    # 1.1. WOJEWÓDZTWO
     woj = df_terc[df_terc["POW"].isna() & df_terc["GMI"].isna()][
         ["WOJ", "NAZWA"]
     ].copy()
     woj.columns = ["ID_Wojewodztwo", "Nazwa"]
     woj.to_sql("Wojewodztwo", conn, if_exists="replace", index=False)
 
-    # 2. POWIAT
+    # 1.2. POWIAT
     powiaty = df_terc[df_terc["POW"].notna() & df_terc["GMI"].isna()].copy()
     powiaty["ID_Powiat"] = powiaty["WOJ"] + powiaty["POW"]
     powiaty = powiaty.rename(columns={"NAZWA": "Nazwa", "WOJ": "ID_Wojewodztwo"})
     powiaty = powiaty[["ID_Powiat", "Nazwa", "ID_Wojewodztwo"]]
     powiaty.to_sql("Powiat", conn, if_exists="replace", index=False)
 
-    # 3. GMINA
+    # 1.3. GMINA
     gminy = df_terc[df_terc["GMI"].notna()].copy()
     gminy["ID_Gmina"] = gminy["WOJ"] + gminy["POW"] + gminy["GMI"]
     gminy["ID_Powiat"] = gminy["WOJ"] + gminy["POW"]
@@ -71,12 +72,37 @@ def process_teryt(conn):
     gminy = gminy[["ID_Gmina", "Nazwa", "ID_Powiat"]]
     gminy.to_sql("Gmina", conn, if_exists="replace", index=False)
 
-    # 4. MIEJSCOWOŚĆ (SIMC)
+    # 2. MIEJSCOWOŚĆ (SIMC)
     df_simc = pd.read_csv(simc_path, sep=";", dtype=str)
     df_simc["ID_Gmina"] = df_simc["WOJ"] + df_simc["POW"] + df_simc["GMI"]
     miejscowosci = df_simc.rename(columns={"SYM": "ID_Miejscowosc", "NAZWA": "Nazwa"})
     miejscowosci = miejscowosci[["ID_Miejscowosc", "Nazwa", "ID_Gmina"]]
     miejscowosci.to_sql("Miejscowosc", conn, if_exists="replace", index=False)
+
+    # 3. ULICE (ULIC)
+    df_ulic = pd.read_csv(ulic_path, sep=";", dtype=str)
+
+    df_ulic.columns = df_ulic.columns.str.strip()
+
+    df_ulic["CECHA"] = df_ulic["CECHA"].fillna("").str.strip()
+    df_ulic["NAZWA_1"] = df_ulic["NAZWA_1"].fillna("").str.strip()
+    df_ulic["NAZWA_2"] = df_ulic["NAZWA_2"].fillna("").str.strip()
+
+    def create_full_street_name(row):
+        parts = [row["CECHA"]]
+        if row["NAZWA_2"]:
+            parts.append(row["NAZWA_2"])
+        parts.append(row["NAZWA_1"])
+        return " ".join(parts).strip()
+
+    df_ulic["Nazwa"] = df_ulic.apply(create_full_street_name, axis=1)
+
+    ulice = df_ulic.rename(
+        columns={"SYM_UL": "ID_Ulica", "SYM": "ID_Miejscowosc"}
+    ).copy()
+    ulice = ulice[["ID_Ulica", "Nazwa", "ID_Miejscowosc"]]
+
+    ulice.to_sql("Ulica", conn, if_exists="replace", index=False)
 
 
 def setup_dictionary_database():
