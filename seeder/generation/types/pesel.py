@@ -1,9 +1,11 @@
 import random
-from datetime import datetime
+from datetime import date
 from enum import Enum
 from typing import override
 
 from seeder.generation.base import BaseGenerator
+from seeder.generation.helpers.db_utils import resolve_gender
+from seeder.generation.types.birth_date import BirthDateGenerator
 
 
 class Gender(Enum):
@@ -33,7 +35,7 @@ class PeselGenerator(BaseGenerator):
         )
         return (10 - weighted_sum % 10) % 10
 
-    def _generate_birth_date_part(self, birth_date: datetime) -> str:
+    def _generate_birth_date_part(self, birth_date: date) -> str:
         """Generate the birthdate part of the PESEL number."""
 
         year = birth_date.year % 100
@@ -63,24 +65,12 @@ class PeselGenerator(BaseGenerator):
 
         ctx = context if context is not None else {}
 
-        gender_val = ctx.get("gender")
-        if not gender_val:
-            gender_enum = random.choice([Gender.MALE, Gender.FEMALE])
-            ctx["gender"] = gender_enum.value
-        else:
-            gender_enum = (
-                Gender.MALE
-                if str(gender_val).upper() in ["M", "MALE"]
-                else Gender.FEMALE
-            )
+        gender_str = resolve_gender(ctx)
+        gender_enum = Gender.MALE if gender_str == "M" else Gender.FEMALE
 
-        birth_date_obj = ctx.get("birth_date")
-
-        if not birth_date_obj:
-            start_date = datetime(year_from, 1, 1)
-            end_date = datetime(year_to, 12, 31)
-            birth_date_obj = start_date + (end_date - start_date) * random.random()
-            ctx["birth_date"] = birth_date_obj.date()
+        birth_date_obj = BirthDateGenerator().generate(
+            ctx, year_from=year_from, year_to=year_to
+        )
 
         birth_date_part = self._generate_birth_date_part(birth_date_obj)
         gender_digit = self._generate_gender_digit(gender_enum)

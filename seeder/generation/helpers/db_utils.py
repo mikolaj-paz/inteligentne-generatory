@@ -1,4 +1,5 @@
 import os
+import random
 import sqlite3
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,3 +14,12 @@ def fetch_random_from_dict(table: str, column: str):
         cursor.execute(query)
         res = cursor.fetchone()
         return res[0] if res else None
+
+
+def resolve_gender(ctx: dict) -> str:
+    """Return the gender ('M' or 'F') from context, generating and caching one if absent."""
+    gender = ctx.get("gender")
+    if not gender:
+        gender = random.choice(["M", "F"])
+        ctx["gender"] = gender
+    return str(gender)

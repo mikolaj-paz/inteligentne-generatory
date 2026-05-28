@@ -22,8 +22,7 @@ def _fetch_tables(connection: sqlite3.Connection) -> list[TableInfo]:
     ]
 
 
-def _fetch_columns(connection: sqlite3.Connection, table_name: str) -> list[ColumnInfo]:
-    del connection
+def _fetch_columns(table_name: str) -> list[ColumnInfo]:
     schema_map = get_schema_map()
 
     if table_name not in schema_map:
@@ -32,11 +31,9 @@ def _fetch_columns(connection: sqlite3.Connection, table_name: str) -> list[Colu
     return [deepcopy(column) for column in schema_map[table_name].columns]
 
 
-def _fetch_foreign_keys(
-    connection: sqlite3.Connection, table_name: str
-) -> dict[str, ForeignKeyInfo]:
+def _fetch_foreign_keys(table_name: str) -> dict[str, ForeignKeyInfo]:
     foreign_keys: dict[str, ForeignKeyInfo] = {}
-    for column in _fetch_columns(connection, table_name):
+    for column in _fetch_columns(table_name):
         if column.foreign_key is not None:
             foreign_keys[column.name] = deepcopy(column.foreign_key)
 
@@ -90,8 +87,8 @@ def fetch_schema(connection: sqlite3.Connection) -> list[TableInfo]:
     tables = _fetch_tables(connection)
 
     for table in tables:
-        table.columns = _fetch_columns(connection, table.name)
-        foreign_keys = _fetch_foreign_keys(connection, table.name)
+        table.columns = _fetch_columns(table.name)
+        foreign_keys = _fetch_foreign_keys(table.name)
 
         for column in table.columns:
             if column.name in foreign_keys:

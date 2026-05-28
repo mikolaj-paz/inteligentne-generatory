@@ -5,7 +5,7 @@ from seeder.generation.helpers.db_utils import fetch_random_from_dict
 
 
 class CompanyNameGenerator(BaseGenerator):
-    name = "nazwa_firmy"
+    name = "firma"
 
     @override
     def generate(self, context: dict = None, **kwargs) -> str:
