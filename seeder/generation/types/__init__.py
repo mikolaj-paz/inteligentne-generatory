@@ -13,6 +13,7 @@ from seeder.generation.types import (
     gender,
     company_name,
     birth_date,
+    position,
 )
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     "gender",
     "company_name",
     "birth_date",
+    "position",
 ]

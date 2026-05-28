@@ -2,9 +2,13 @@
 rows = 20
 
 [Firma]
-rows = 25
+rows = 20
 fields = ["nazwa", "regon", "nip"]
 
 [Osoba]
 rows = 50
 fields = ["imie", "nazwisko", "data_urodzenia", "pesel", "plec"]
+
+[Zatrudnienie]
+rows = 10
+fields = ["stanowisko", "id_osoba", "id_firma"]

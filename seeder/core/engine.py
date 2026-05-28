@@ -8,13 +8,40 @@ from seeder.generation.generators import generate_value
 from seeder.models import ColumnInfo, Schema, Config, SeederRequest, TableInfo
 
 
+def _sort_schema_by_dependencies(schema: Schema) -> list[TableInfo]:
+    table_order = [
+        "rodzajumowy",
+        "wojewodztwo",
+        "powiat",
+        "gmina",
+        "miejscowosc",
+        "ulica",
+        "adres",
+        "bank",
+        "firma",
+        "osoba",
+        "konto",
+        "zatrudnienie"
+    ]
+
+    def get_sort_key(table: TableInfo):
+        name = table.name.lower()
+        if name in table_order:
+            return table_order.index(name)
+        return 99
+
+    return sorted(schema, key=get_sort_key)
+
+
+
 def run(connection: sqlite3.Connection, schema: Schema, config: Config) -> None:
     """Main seeding loop - generate and insert data based on schema and config."""
     row_counts = _compute_row_counts(schema, config)
     pk_cache: defaultdict[str, list] = defaultdict(list)
     explicit = {r.table_name: r for r in config}
+    sorted_schema = _sort_schema_by_dependencies(schema)
 
-    for table in schema:
+    for table in sorted_schema:
         count = row_counts.get(table.name, 0)
         if count == 0:
             continue
@@ -97,6 +124,7 @@ def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
         for column in table.columns:
             if column.foreign_key:
                 parent = column.foreign_key.referenced_table
-                row_counts[parent] = row_counts.get(parent, 0) + child_count
+                if row_counts.get(parent, 0) == 0:
+                    row_counts[parent] = child_count
 
     return row_counts
