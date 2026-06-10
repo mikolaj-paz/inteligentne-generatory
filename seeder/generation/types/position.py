@@ -11,7 +11,6 @@ class PositionGenerator(BaseGenerator):
     def generate(self, context: dict = None, **kwargs) -> str:
         row_data = context["row_data"]
         company_cache = context["company_cache"]
-        print(company_cache, row_data["id_firma"])
 
         firma_id = row_data.get("id_firma")
 
