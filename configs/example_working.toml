@@ -10,5 +10,5 @@ rows = 50000
 fields = ["imie", "nazwisko", "data_urodzenia", "pesel", "plec"]
 
 [Zatrudnienie]
-rows = 10
+rows = 3000
 fields = ["stanowisko", "id_osoba", "id_firma"]

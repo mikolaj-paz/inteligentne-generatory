@@ -1,7 +1,3 @@
-[Firma]
-rows = 25
-fields = ["nazwa", "regon", "nip"]
-
 [Osoba]
 rows = 150
 fields = ["imie", "nazwisko", "data_urodzenia", "pesel", "plec"]

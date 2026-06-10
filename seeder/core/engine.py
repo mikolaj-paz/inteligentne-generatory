@@ -40,13 +40,14 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config) -> None:
     pk_cache: defaultdict[str, list] = defaultdict(list)
     explicit = {r.table_name: r for r in config}
     sorted_schema = _sort_schema_by_dependencies(schema)
+    company_cache: dict[int, str] = {}
 
     for table in sorted_schema:
         count = row_counts.get(table.name, 0)
         if count == 0:
             continue
         request = explicit.get(table.name)
-        _seed_table(connection, table, count, request, pk_cache)
+        _seed_table(connection, table, count, request, pk_cache, company_cache)
 
 
 def _seed_table(
@@ -55,6 +56,7 @@ def _seed_table(
     row_count: int,
     request: SeederRequest | None,
     pk_cache: defaultdict[str, list],
+    company_cache: dict[int, str],
 ) -> None:
     table_context = {
         "used_pesels": set()
@@ -63,7 +65,9 @@ def _seed_table(
         for _ in range(row_count):
             row_data = {}
             row_context = {
-                "used_pesels": table_context["used_pesels"]
+                "used_pesels": table_context["used_pesels"],
+                "row_data": row_data,
+                "company_cache": company_cache,
             }
 
             for column in table_info.columns:
@@ -78,7 +82,11 @@ def _seed_table(
                 row_data[column.name] = val
 
             # Auto-increment PKs produce None; exclude them from the INSERT.
-            filtered = {k: v for k, v in row_data.items() if v is not None}
+            filtered = {
+                k: v
+                for k, v in row_data.items()
+                if v is not None and not k.startswith("_")
+            }
             cols = ", ".join(filtered.keys())
             placeholders = ", ".join(["?"] * len(filtered))
             sql = f"INSERT INTO {table_info.name} ({cols}) VALUES ({placeholders})"
@@ -86,6 +94,10 @@ def _seed_table(
 
             # Cache the inserted PK so child tables can reference it.
             pk_cache[table_info.name].append(cursor.lastrowid)
+            if table_info.name == "Firma":
+                industry = row_data.get("_industry")
+                if industry is not None:
+                    company_cache[cursor.lastrowid] = industry
 
             pbar.update(1)
 

@@ -1,6 +1,8 @@
 import time
 from datetime import date
 
+from seeder.generation.types.pesel import PeselGenerator
+
 
 def test_pesel_uniqueness():
     print("🚀 Rozpoczynam test unikalności generatora PESEL...")
@@ -33,7 +35,7 @@ def test_pesel_uniqueness():
     end_time = time.time()
 
     liczba_wygenerowanych = len(wygenerowane_pesele)
-    liczba_unikalnych = len(set(wygenerowane_pesele))  # set() w Pythonie automatycznie usunie duplikaty
+    liczba_unikalnych = len(set(wygenerowane_pesele))
 
     print("\n--- WYNIKI TESTU ---")
     print(f"Wygenerowano łącznie: {liczba_wygenerowanych} rekordów.")
@@ -41,11 +43,11 @@ def test_pesel_uniqueness():
     print(f"Czas wykonania: {end_time - start_time:.4f} sekundy.")
 
     if liczba_wygenerowanych == liczba_unikalnych:
-        print("\n✅ Sukces! Generator nie stworzył ani jednego duplikatu. Pamięć RAM (Set) działa perfekcyjnie.")
+        print("\n✅ Sukces! Generator nie stworzył ani jednego duplikatu.")
     else:
         print("\n❌ Błąd! W paczce danych pojawiły się duplikaty.")
 
-    print("\nPrzykładowe wygenerowane numery (zwróć uwagę na stały początek 950505):")
+    print("\nPrzykładowe wygenerowane numery:")
     for p in wygenerowane_pesele[:5]:
         print(f"  - {p}")
 

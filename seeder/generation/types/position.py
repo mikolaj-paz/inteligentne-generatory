@@ -1,6 +1,7 @@
 import random
 from typing import override
 from seeder.generation.base import BaseGenerator
+from seeder.generation.helpers.constants import INDUSTRY_POSITIONS
 
 
 class PositionGenerator(BaseGenerator):
@@ -8,25 +9,20 @@ class PositionGenerator(BaseGenerator):
 
     @override
     def generate(self, context: dict = None, **kwargs) -> str:
-        positions = [
-            "Dyrektor Generalny (CEO)",
-            "Dyrektor Operacyjny",
-            "Dyrektor Finansowy",
-            "Dyrektor ds. Marketingu",
-            "Kierownik Działu HR",
-            "Specjalista ds. Rekrutacji",
-            "Główna Księgowa",
-            "Młodszy Księgowy",
-            "Kierownik Projektu (Project Manager)",
-            "Kierownik Działu Sprzedaży",
-            "Specjalista ds. Obsługi Klienta",
-            "Przedstawiciel Handlowy",
-            "Kierownik Administracji",
-            "Asystent Zarządu / Recepcjonista",
-            "Specjalista ds. Zaopatrzenia",
-            "Koordynator ds. Logistyki",
-            "Radca Prawny / Doradca",
-            "Praktykant / Stażysta"
-        ]
+        row_data = context["row_data"]
+        company_cache = context["company_cache"]
+        print(company_cache, row_data["id_firma"])
+
+        firma_id = row_data.get("id_firma")
+
+        if firma_id is None:
+            industry = random.choice(list(INDUSTRY_POSITIONS.keys()))
+        else:
+            industry = company_cache.get(firma_id)
+
+            if industry is None:
+                industry = random.choice(list(INDUSTRY_POSITIONS.keys()))
+
+        positions = INDUSTRY_POSITIONS[industry]
 
         return random.choice(positions)
