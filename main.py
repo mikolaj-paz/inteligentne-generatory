@@ -29,7 +29,14 @@ from seeder.models import Config, Schema
     default=False,
     help="Preview parsed config and resolved tables without writing to the database.",
 )
-def main(config_path, db_path, dry_run) -> None:
+@click.option(
+    "--export",
+    "export_path",
+    type=click.Path(writable=True),
+    help="Path to export the generated data as an SQL script.",
+)
+
+def main(config_path, db_path, dry_run, export_path) -> None:
     try:
         requests = load_config(config_path)
         resolved_schema = resolve_tables(requests)
@@ -53,8 +60,14 @@ def main(config_path, db_path, dry_run) -> None:
 
         click.echo("Database schema creation completed.")
 
-        click.echo("Seeding data...")
-        engine.run(connection, resolved_schema, requests)
+        if export_path:
+            click.echo(f"Seeding data and exporting to {export_path}...")
+            with open(export_path, "w", encoding="utf-8") as f:
+                f.write("-- Generated SQL Export\n\n")
+            _export_schema_to_sql(export_path, resolved_schema)
+        else:
+            click.echo("Seeding data...")
+        engine.run(connection, resolved_schema, requests, export_path=export_path)
         connection.commit()
         click.echo("Data seeding completed successfully!")
 
@@ -94,6 +107,37 @@ def _print_dry_run(requests: Config, resolved_schema: Schema) -> None:
     click.echo("\nTables that would be created (including required dependencies):")
     for table in resolved_schema:
         click.echo(f"\t{table.name}")
+
+
+def _export_schema_to_sql(export_path: str, schema: Schema) -> None:
+    with open(export_path, "a", encoding="utf-8") as f:
+        f.write("-- Database Schema Creation\n")
+        f.write("PRAGMA foreign_keys = OFF;\n\n")
+
+        for table in schema:
+            columns_sql = []
+            foreign_keys_sql = []
+
+            for col in table.columns:
+                col_def = f"    [{col.name}] {col.data_type}"
+                if col.is_primary_key:
+                    col_def += " PRIMARY KEY"
+                    if col.is_auto_increment:
+                        col_def += " AUTOINCREMENT"
+                if not col.is_nullable and not col.is_primary_key:
+                    col_def += " NOT NULL"
+                columns_sql.append(col_def)
+
+                if col.foreign_key:
+                    fk_def = f"    FOREIGN KEY ([{col.name}]) REFERENCES [{col.foreign_key.referenced_table}] ([{col.foreign_key.referenced_column}])"
+                    foreign_keys_sql.append(fk_def)
+
+            all_elements = columns_sql + foreign_keys_sql
+            create_stmt = f"CREATE TABLE IF NOT EXISTS [{table.name}] (\n" + ",\n".join(all_elements) + "\n);\n\n"
+            f.write(create_stmt)
+
+        f.write("PRAGMA foreign_keys = ON;\n")
+        f.write("\n-- Data Seeding\n")
 
 
 if __name__ == "__main__":

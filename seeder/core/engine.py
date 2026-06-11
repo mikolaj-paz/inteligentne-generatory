@@ -39,7 +39,7 @@ def _sort_schema_by_dependencies(schema: Schema) -> list[TableInfo]:
 
 
 
-def run(connection: sqlite3.Connection, schema: Schema, config: Config) -> None:
+def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_path) -> None:
     """Main seeding loop - generate and insert data based on schema and config."""
     row_counts = _compute_row_counts(schema, config)
     pk_cache: defaultdict[str, list] = defaultdict(list)
@@ -66,6 +66,9 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config) -> None:
                 matched_name = next((name for name in resolved_names if name.lower() == table.lower()), table)
                 cursor.execute(f"INSERT OR IGNORE INTO [{matched_name}] SELECT * FROM dict_db.[{table}]")
 
+                if export_path:
+                    _export_teryt_table_to_sql(connection, matched_name, export_path)
+
             connection.commit()
             cursor.execute("DETACH DATABASE dict_db")
             print("[Engine] Masowe wstrzykiwanie danych TERYT zakończone sukcesem.")
@@ -86,7 +89,7 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config) -> None:
         if count == 0:
             continue
         request = explicit.get(table.name)
-        _seed_table(connection, table, count, request, pk_cache, company_cache)
+        _seed_table(connection, table, count, request, pk_cache, company_cache, export_path=export_path)
 
 
 def _seed_table(
@@ -96,10 +99,14 @@ def _seed_table(
     request: SeederRequest | None,
     pk_cache: defaultdict[str, list],
     company_cache: dict[int, str],
+    export_path: str = None,
 ) -> None:
     table_context = {
         "used_pesels": set()
     }
+
+    sql_buffer = []
+
     with tqdm(total=row_count, desc=table_info.name, unit="row") as pbar:
         for _ in range(row_count):
             row_data = {}
@@ -131,6 +138,23 @@ def _seed_table(
             sql = f"INSERT INTO {table_info.name} ({cols}) VALUES ({placeholders})"
             cursor = connection.execute(sql, list(filtered.values()))
 
+            if export_path:
+                formatted_vals = []
+                for v in filtered.values():
+                    if v is None:
+                        formatted_vals.append("NULL")
+                    elif isinstance(v, str):
+                        escaped = v.replace("'", "''")
+                        formatted_vals.append(f"'{escaped}'")
+                    elif isinstance(v, bool):
+                        formatted_vals.append("1" if v else "0")
+                    else:
+                        formatted_vals.append(str(v))
+
+                vals_str = ", ".join(formatted_vals)
+                raw_sql = f"INSERT INTO {table_info.name} ({cols}) VALUES ({vals_str});"
+                sql_buffer.append(raw_sql)
+
             # Cache the inserted PK so child tables can reference it.
             pk_cache[table_info.name].append(cursor.lastrowid)
             if table_info.name == "Firma":
@@ -139,6 +163,10 @@ def _seed_table(
                     company_cache[cursor.lastrowid] = industry
 
             pbar.update(1)
+    if export_path and sql_buffer:
+        with open(export_path, "a", encoding="utf-8") as f:
+            f.write(f"\n-- Data for table {table_info.name}\n")
+            f.write("\n".join(sql_buffer) + "\n")
 
 
 def resolve_foreign_key(
@@ -179,3 +207,34 @@ def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
                     row_counts[parent] = child_count
 
     return row_counts
+
+
+def _export_teryt_table_to_sql(connection: sqlite3.Connection, table_name: str, export_path: str) -> None:
+    """Fetches seeded TERYT rows and appends them to the SQL export file."""
+    cursor = connection.cursor()
+
+    cursor.execute(f"PRAGMA table_info([{table_name}])")
+    columns = [row[1] for row in cursor.fetchall()]
+    cols_str = ", ".join([f"[{c}]" for c in columns])
+
+    cursor.execute(f"SELECT * FROM [{table_name}]")
+    rows = cursor.fetchall()
+
+    teryt_buffer = []
+    for row in rows:
+        formatted_vals = []
+        for v in row:
+            if v is None:
+                formatted_vals.append("NULL")
+            elif isinstance(v, str):
+                formatted_vals.append(f"'{v.replace("'", "''")}'")
+            else:
+                formatted_vals.append(str(v))
+
+        vals_str = ", ".join(formatted_vals)
+        teryt_buffer.append(f"INSERT OR IGNORE INTO [{table_name}] ({cols_str}) VALUES ({vals_str});")
+
+    if teryt_buffer:
+        with open(export_path, "a", encoding="utf-8") as f:
+            f.write(f"\n-- Data for TERYT table {table_name}\n")
+            f.write("\n".join(teryt_buffer) + "\n")
