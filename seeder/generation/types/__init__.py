@@ -14,6 +14,8 @@ from seeder.generation.types import (
     company_name,
     birth_date,
     position,
+    house_number,
+    flat_number
 )
 
 __all__ = [
@@ -32,4 +34,6 @@ __all__ = [
     "company_name",
     "birth_date",
     "position",
+    "house_number",
+    "flat_number",
 ]

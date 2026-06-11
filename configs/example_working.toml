@@ -1,14 +1,3 @@
-[Miejscowosc]
-rows = 20
-
-[Firma]
-rows = 20
-fields = ["nazwa", "regon", "nip"]
-
-[Osoba]
-rows = 50000
-fields = ["imie", "nazwisko", "data_urodzenia", "pesel", "plec"]
-
-[Zatrudnienie]
-rows = 3000
-fields = ["stanowisko", "id_osoba", "id_firma"]
+[Adres]
+rows = 300
+fields = ["id_ulica", "numer_domu", "numer_mieszkania"]

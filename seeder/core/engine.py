@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 import random
 import sqlite3
@@ -6,6 +7,10 @@ from tqdm import tqdm
 
 from seeder.generation.generators import generate_value
 from seeder.models import ColumnInfo, Schema, Config, SeederRequest, TableInfo
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
+DICT_DB_PATH = os.path.join(PROJECT_ROOT, "databases", "dictionary.db")
 
 
 def _sort_schema_by_dependencies(schema: Schema) -> list[TableInfo]:
@@ -38,11 +43,45 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config) -> None:
     """Main seeding loop - generate and insert data based on schema and config."""
     row_counts = _compute_row_counts(schema, config)
     pk_cache: defaultdict[str, list] = defaultdict(list)
+
+    teryt_tables = ["Wojewodztwo", "Powiat", "Gmina", "Miejscowosc", "Ulica"]
+    teryt_tables_lower = [t.lower() for t in teryt_tables]
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("SELECT id_ulica FROM Ulica LIMIT 1")
+        has_teryt = cursor.fetchone() is not None
+    except sqlite3.OperationalError:
+        has_teryt = False
+    teryt_tables = ["Wojewodztwo", "Powiat", "Gmina", "Miejscowosc", "Ulica"]
+
+    if not has_teryt:
+        print("[Engine] Wykryto pustą bazę. Przełączanie w tryb masowego wstrzykiwania TERYT...")
+        try:
+            cursor.execute(f"ATTACH DATABASE '{DICT_DB_PATH}' AS dict_db")
+
+            resolved_names = {table.name for table in schema}
+
+            for table in teryt_tables:
+                matched_name = next((name for name in resolved_names if name.lower() == table.lower()), table)
+                cursor.execute(f"INSERT OR IGNORE INTO [{matched_name}] SELECT * FROM dict_db.[{table}]")
+
+            connection.commit()
+            cursor.execute("DETACH DATABASE dict_db")
+            print("[Engine] Masowe wstrzykiwanie danych TERYT zakończone sukcesem.")
+        except Exception as e:
+            raise RuntimeError(f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}")
+
+    cursor.execute("SELECT ID_Ulica FROM Ulica")
+    pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
+
     explicit = {r.table_name: r for r in config}
     sorted_schema = _sort_schema_by_dependencies(schema)
     company_cache: dict[int, str] = {}
 
     for table in sorted_schema:
+        if table.name.lower() in teryt_tables_lower:
+            continue
         count = row_counts.get(table.name, 0)
         if count == 0:
             continue

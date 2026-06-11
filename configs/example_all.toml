@@ -1,5 +1,5 @@
-[Konto]
-rows = 100
+[Adres]
+rows = 10000
 
-[Zatrudnienie]
-rows = 100
+[Osoba]
+rows = 20000

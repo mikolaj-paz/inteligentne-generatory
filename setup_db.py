@@ -46,42 +46,81 @@ def process_teryt(conn):
     if not os.path.exists(terc_path) or not os.path.exists(simc_path):
         raise FileNotFoundError("Brak plików TERC.csv lub SIMC.csv w data/source!")
 
-    # 1. TERC
     df_terc = pd.read_csv(terc_path, sep=";", dtype=str)
 
-    # 1.1. WOJEWÓDZTWO
-    woj = df_terc[df_terc["POW"].isna() & df_terc["GMI"].isna()][
-        ["WOJ", "NAZWA"]
-    ].copy()
-    woj.columns = ["ID_Wojewodztwo", "Nazwa"]
+    # =========================================================================
+    # 1. WOJEWÓDZTWO
+    # =========================================================================
+    woj = df_terc[df_terc["POW"].isna() & df_terc["GMI"].isna()][["WOJ", "NAZWA"]].copy()
+    woj.columns = ["kod_woj_gus", "nazwa"]
     woj.to_sql("Wojewodztwo", conn, if_exists="replace", index=False)
 
-    # 1.2. POWIAT
+    # Wyciągamy rowid jako oficjalną, fizyczną kolumnę id_wojewodztwo
+    woj_map = pd.read_sql("SELECT rowid as id_wojewodztwo, kod_woj_gus FROM Wojewodztwo", conn)
+
+    # Nadpisujemy tabelę w bazie, żeby miała fizyczną kolumnę id_wojewodztwo oraz nazwa
+    woj_to_db = df_terc[df_terc["POW"].isna() & df_terc["GMI"].isna()][["WOJ", "NAZWA"]].copy()
+    woj_to_db.columns = ["kod_woj_gus", "nazwa"]
+    woj_to_db = woj_to_db.merge(woj_map, on="kod_woj_gus", how="inner")
+    woj_to_db[["id_wojewodztwo", "nazwa"]].to_sql("Wojewodztwo", conn, if_exists="replace", index=False)
+
+    # =========================================================================
+    # 2. POWIAT
+    # =========================================================================
     powiaty = df_terc[df_terc["POW"].notna() & df_terc["GMI"].isna()].copy()
-    powiaty["ID_Powiat"] = powiaty["WOJ"] + powiaty["POW"]
-    powiaty = powiaty.rename(columns={"NAZWA": "Nazwa", "WOJ": "ID_Wojewodztwo"})
-    powiaty = powiaty[["ID_Powiat", "Nazwa", "ID_Wojewodztwo"]]
-    powiaty.to_sql("Powiat", conn, if_exists="replace", index=False)
+    powiaty["kod_pow_gus"] = powiaty["WOJ"] + powiaty["POW"]
+    powiaty = powiaty.rename(columns={"NAZWA": "nazwa", "WOJ": "kod_woj_gus"})
 
-    # 1.3. GMINA
+    powiaty = powiaty.merge(woj_map, on="kod_woj_gus", how="inner")
+    powiaty.to_sql("Powiat_Temp", conn, if_exists="replace", index=False)
+
+    # Wyciągamy rowid dla powiatu jako fizyczne id_powiat
+    pow_map = pd.read_sql("SELECT rowid as id_powiat, kod_pow_gus FROM Powiat_Temp", conn)
+    powiaty = powiaty.merge(pow_map, on="kod_pow_gus", how="inner")
+
+    # Zapisujemy z jawnym id_powiat oraz id_wojewodztwo
+    powiaty_to_db = powiaty[["id_powiat", "nazwa", "id_wojewodztwo"]].copy()
+    powiaty_to_db.to_sql("Powiat", conn, if_exists="replace", index=False)
+
+    # =========================================================================
+    # 3. GMINA
+    # =========================================================================
     gminy = df_terc[df_terc["GMI"].notna()].copy()
-    gminy["ID_Gmina"] = gminy["WOJ"] + gminy["POW"] + gminy["GMI"]
-    gminy["ID_Powiat"] = gminy["WOJ"] + gminy["POW"]
+    gminy["kod_gmi_gus"] = gminy["WOJ"] + gminy["POW"] + gminy["GMI"]
+    gminy["kod_pow_gus"] = gminy["WOJ"] + gminy["POW"]
+    gminy = gminy.rename(columns={"NAZWA": "nazwa"})
 
-    gminy = gminy.rename(columns={"NAZWA": "Nazwa"})
-    gminy = gminy[["ID_Gmina", "Nazwa", "ID_Powiat"]]
-    gminy.to_sql("Gmina", conn, if_exists="replace", index=False)
+    gminy = gminy.merge(pow_map, on="kod_pow_gus", how="inner")
+    gminy.to_sql("Gmina_Temp", conn, if_exists="replace", index=False)
 
-    # 2. MIEJSCOWOŚĆ (SIMC)
+    # Wyciągamy rowid dla gminy jako fizyczne id_gmina
+    gmi_map = pd.read_sql("SELECT rowid as id_gmina, kod_gmi_gus FROM Gmina_Temp", conn)
+    gminy = gminy.merge(gmi_map, on="kod_gmi_gus", how="inner")
+
+    gminy_to_db = gminy[["id_gmina", "nazwa", "id_powiat"]].copy()
+    gminy_to_db.to_sql("Gmina", conn, if_exists="replace", index=False)
+
+    # =========================================================================
+    # 4. MIEJSCOWOŚĆ (SIMC)
+    # =========================================================================
     df_simc = pd.read_csv(simc_path, sep=";", dtype=str)
-    df_simc["ID_Gmina"] = df_simc["WOJ"] + df_simc["POW"] + df_simc["GMI"]
-    miejscowosci = df_simc.rename(columns={"SYM": "ID_Miejscowosc", "NAZWA": "Nazwa"})
-    miejscowosci = miejscowosci[["ID_Miejscowosc", "Nazwa", "ID_Gmina"]]
-    miejscowosci.to_sql("Miejscowosc", conn, if_exists="replace", index=False)
+    df_simc["kod_gmi_gus"] = df_simc["WOJ"] + df_simc["POW"] + df_simc["GMI"]
 
-    # 3. ULICE (ULIC)
+    miejscowosci = df_simc.rename(columns={"SYM": "kod_miejscowosci_gus", "NAZWA": "nazwa"})
+    miejscowosci = miejscowosci.merge(gmi_map, on="kod_gmi_gus", how="inner")
+    miejscowosci.to_sql("Miejscowosc_Temp", conn, if_exists="replace", index=False)
+
+    # Wyciągamy rowid dla miejscowości jako fizyczne id_miejscowosc
+    miejscowosci_map = pd.read_sql("SELECT rowid as id_miejscowosc, kod_miejscowosci_gus FROM Miejscowosc_Temp", conn)
+    miejscowosci = miejscowosci.merge(miejscowosci_map, on="kod_miejscowosci_gus", how="inner")
+
+    miejscowosci_to_db = miejscowosci[["id_miejscowosc", "nazwa", "id_gmina"]].copy()
+    miejscowosci_to_db.to_sql("Miejscowosc", conn, if_exists="replace", index=False)
+
+    # =========================================================================
+    # 5. ULICE (ULIC)
+    # =========================================================================
     df_ulic = pd.read_csv(ulic_path, sep=";", dtype=str)
-
     df_ulic.columns = df_ulic.columns.str.strip()
 
     df_ulic["CECHA"] = df_ulic["CECHA"].fillna("").str.strip()
@@ -95,14 +134,32 @@ def process_teryt(conn):
         parts.append(row["NAZWA_1"])
         return " ".join(parts).strip()
 
-    df_ulic["Nazwa"] = df_ulic.apply(create_full_street_name, axis=1)
+    df_ulic["nazwa"] = df_ulic.apply(create_full_street_name, axis=1)
+    ulice = df_ulic.rename(columns={"SYM_UL": "kod_ulicy_gus", "SYM": "kod_miejscowosci_gus"}).copy()
 
-    ulice = df_ulic.rename(
-        columns={"SYM_UL": "ID_Ulica", "SYM": "ID_Miejscowosc"}
-    ).copy()
-    ulice = ulice[["ID_Ulica", "Nazwa", "ID_Miejscowosc"]]
+    ulice = ulice.merge(miejscowosci_map, on="kod_miejscowosci_gus", how="inner")
+    ulice.to_sql("Ulica_Temp", conn, if_exists="replace", index=False)
 
-    ulice.to_sql("Ulica", conn, if_exists="replace", index=False)
+    # Wyciągamy rowid dla ulicy jako id_ulica
+    ulice_map = pd.read_sql("SELECT rowid as id_ulica, kod_ulicy_gus, id_miejscowosc FROM Ulica_Temp", conn)
+
+    ulice_to_db = ulice_map[["id_ulica", "id_miejscowosc"]].copy()
+
+    # Ponieważ nazwa została w ramce ulice, a nie ulice_map, łączymy z powrotem po kod_ulicy_gus i id_miejscowosc
+    ulice_final = ulice[["nazwa", "kod_ulicy_gus", "id_miejscowosc"]].merge(ulice_map,
+                                                                            on=["kod_ulicy_gus", "id_miejscowosc"],
+                                                                            how="inner")
+
+    ulice_to_db = ulice_final[["id_ulica", "nazwa", "id_miejscowosc"]].copy()
+    ulice_to_db.to_sql("Ulica", conn, if_exists="replace", index=False)
+
+    # Sprzątanie tymczasowych tabel roboczych z bazy danych
+    cursor = conn.cursor()
+    cursor.execute("DROP TABLE Powiat_Temp")
+    cursor.execute("DROP TABLE Gmina_Temp")
+    cursor.execute("DROP TABLE Miejscowosc_Temp")
+    cursor.execute("DROP TABLE Ulica_Temp")
+    conn.commit()
 
 
 def setup_dictionary_database():
