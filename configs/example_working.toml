@@ -1,2 +1,9 @@
-[Konto]
+[Osoba]
 rows = 150
+
+[Adres]
+rows = 200
+
+[Zatrudnienie]
+rows = 100
+

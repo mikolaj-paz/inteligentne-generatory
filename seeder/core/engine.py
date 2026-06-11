@@ -68,7 +68,7 @@ def run(
         # Dane są potrzebne, ale baza jest pusta -> WSTRZYKUJEMY
         if not has_teryt:
             print(
-                "[Engine] Wykryto pustą bazę. Przełączanie w tryb masowego wstrzykiwania TERYT..."
+                "[Engine] Wykryto pustą bazę. Ładowanie danych TERYT..."
             )
             try:
                 cursor.execute(f"ATTACH DATABASE '{DICT_DB_PATH}' AS dict_db")
@@ -95,9 +95,7 @@ def run(
 
                 connection.commit()
                 cursor.execute("DETACH DATABASE dict_db")
-                print("[Engine] Masowe wstrzykiwanie danych TERYT zakończone sukcesem.")
-                cursor.execute("SELECT id_ulica FROM Ulica")
-                pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
+                print("[Engine] Ładowanie danych TERYT zakończone sukcesem.")
             except Exception as e:
                 raise RuntimeError(
                     f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}"
@@ -106,6 +104,8 @@ def run(
             print(
                 "[Engine] Dane TERYT są wymagane i są już obecne w bazie. Pomijam wstrzykiwanie."
             )
+        cursor.execute("SELECT id_ulica FROM Ulica")
+        pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
     else:
         print(
             "[Engine] Konfiguracja nie wymaga danych TERYT. Pomijam sprawdzanie bazy i wstrzykiwanie."
