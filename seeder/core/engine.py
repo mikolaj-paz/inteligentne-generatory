@@ -48,35 +48,51 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
     teryt_tables_lower = [t.lower() for t in teryt_tables]
     cursor = connection.cursor()
 
-    try:
-        cursor.execute("SELECT id_ulica FROM Ulica LIMIT 1")
-        has_teryt = cursor.fetchone() is not None
-    except sqlite3.OperationalError:
-        has_teryt = False
-    teryt_tables = ["Wojewodztwo", "Powiat", "Gmina", "Miejscowosc", "Ulica"]
+    requires_teryt = False
+    for table in schema:
+        for column in table.columns:
+            if column.name.lower() in ["id_ulica", "id_miejscowosc", "id_wojewodztwo"]:
+                requires_teryt = True
+                break
+        if requires_teryt:
+            break
 
-    if not has_teryt:
-        print("[Engine] Wykryto pustą bazę. Przełączanie w tryb masowego wstrzykiwania TERYT...")
+    if requires_teryt:
         try:
-            cursor.execute(f"ATTACH DATABASE '{DICT_DB_PATH}' AS dict_db")
+            cursor.execute("SELECT id_ulica FROM Ulica LIMIT 1")
+            has_teryt = cursor.fetchone() is not None
+        except sqlite3.OperationalError:
+            has_teryt = False
 
-            resolved_names = {table.name for table in schema}
+        # Dane są potrzebne, ale baza jest pusta -> WSTRZYKUJEMY
+        if not has_teryt:
+            print("[Engine] Wykryto pustą bazę. Przełączanie w tryb masowego wstrzykiwania TERYT...")
+            try:
+                cursor.execute(f"ATTACH DATABASE '{DICT_DB_PATH}' AS dict_db")
 
-            for table in teryt_tables:
-                matched_name = next((name for name in resolved_names if name.lower() == table.lower()), table)
-                cursor.execute(f"INSERT OR IGNORE INTO [{matched_name}] SELECT * FROM dict_db.[{table}]")
+                resolved_names = {table.name for table in schema}
 
-                if export_path:
-                    _export_teryt_table_to_sql(connection, matched_name, export_path)
+                for table in teryt_tables:
+                    matched_name = next((name for name in resolved_names if name.lower() == table.lower()), table)
+                    cursor.execute(f"INSERT OR IGNORE INTO [{matched_name}] SELECT * FROM dict_db.[{table}]")
 
-            connection.commit()
-            cursor.execute("DETACH DATABASE dict_db")
-            print("[Engine] Masowe wstrzykiwanie danych TERYT zakończone sukcesem.")
-        except Exception as e:
-            raise RuntimeError(f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}")
+                    if export_path:
+                        _export_teryt_table_to_sql(connection, matched_name, export_path)
 
-    cursor.execute("SELECT id_ulica FROM Ulica")
-    pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
+                connection.commit()
+                cursor.execute("DETACH DATABASE dict_db")
+                print("[Engine] Masowe wstrzykiwanie danych TERYT zakończone sukcesem.")
+                cursor.execute("SELECT id_ulica FROM Ulica")
+                pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
+            except Exception as e:
+                raise RuntimeError(f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}")
+        else:
+            print("[Engine] Dane TERYT są wymagane i są już obecne w bazie. Pomijam wstrzykiwanie.")
+    else:
+        print("[Engine] Konfiguracja nie wymaga danych TERYT. Pomijam sprawdzanie bazy i wstrzykiwanie.")
+
+
+
 
     explicit = {r.table_name: r for r in config}
     sorted_schema = _sort_schema_by_dependencies(schema)

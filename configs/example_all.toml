@@ -1,2 +1,5 @@
 [Bank]
 rows = 20000
+
+[Konto]
+rows = 1000
