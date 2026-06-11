@@ -1,3 +1,2 @@
-[Osoba]
+[Adres]
 rows = 150
-fields = ["imie", "nazwisko", "data_urodzenia", "pesel", "plec"]

@@ -1,5 +1,2 @@
-[Adres]
-rows = 10000
-
-[Osoba]
+[Bank]
 rows = 20000

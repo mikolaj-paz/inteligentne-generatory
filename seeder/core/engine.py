@@ -75,7 +75,7 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
         except Exception as e:
             raise RuntimeError(f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}")
 
-    cursor.execute("SELECT ID_Ulica FROM Ulica")
+    cursor.execute("SELECT id_ulica FROM Ulica")
     pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
 
     explicit = {r.table_name: r for r in config}

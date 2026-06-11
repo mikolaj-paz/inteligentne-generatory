@@ -15,7 +15,9 @@ from seeder.generation.types import (
     birth_date,
     position,
     house_number,
-    flat_number
+    flat_number,
+    bank,
+    balance
 )
 
 __all__ = [
@@ -36,4 +38,6 @@ __all__ = [
     "position",
     "house_number",
     "flat_number",
+    "bank",
+    "balance",
 ]
