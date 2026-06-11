@@ -19,7 +19,9 @@ from seeder.generation.types import (
     bank,
     balance,
     salary,
-    employment_contract
+    employment_contract,
+    hire_date,
+    termination_date
 )
 
 __all__ = [
@@ -44,4 +46,6 @@ __all__ = [
     "balance",
     "salary",
     "employment_contract",
+    "hire_date",
+    "termination_date",
 ]
