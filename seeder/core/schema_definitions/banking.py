@@ -20,7 +20,7 @@ BANKING_TABLES: Schema = [
             ),
             ColumnInfo(
                 name="nrb",
-                data_type="INTEGER",
+                data_type="TEXT",
                 is_nullable=False,
                 is_primary_key=False,
                 is_auto_increment=False,
@@ -69,7 +69,7 @@ BANKING_TABLES: Schema = [
             ),
             ColumnInfo(
                 name="numer_konta",
-                data_type="INTEGER",
+                data_type="TEXT",
                 is_nullable=False,
                 is_primary_key=False,
                 is_auto_increment=False,
