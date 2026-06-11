@@ -17,7 +17,9 @@ class RegonGenerator(BaseGenerator):
     ) -> str:
         """Generate a random 9-digit REGON (Polish business identification number)."""
 
-        regon = "".join(str(random.randint(0, 9)) for _ in range(8))
+        first_digit = str(random.randint(1, 9))
+        rest_of_regon = "".join(str(random.randint(0, 9)) for _ in range(7))
+        regon = first_digit + rest_of_regon
         checksum = mod11_weighted(regon, _CHECKSUM_WEIGHTS)
 
         return regon + str(checksum % 10)
