@@ -1,3 +1,2 @@
-[Zatrudnienie]
+[Adres]
 rows = 150
-fields = ["data_zatrudnienia", "data_zwolnienia"]
