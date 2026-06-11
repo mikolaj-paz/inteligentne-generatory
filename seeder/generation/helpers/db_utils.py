@@ -17,7 +17,9 @@ def fetch_random_from_dict(table: str, column: str):
                 cursor = conn.cursor()
                 query = f"SELECT {column} FROM {table}"
                 cursor.execute(query)
-                _DICTIONARY_CACHE[cache_key] = [row[0] for row in cursor.fetchall() if row[0] is not None]
+                _DICTIONARY_CACHE[cache_key] = [
+                    row[0] for row in cursor.fetchall() if row[0] is not None
+                ]
         except sqlite3.Error:
             _DICTIONARY_CACHE[cache_key] = []
 

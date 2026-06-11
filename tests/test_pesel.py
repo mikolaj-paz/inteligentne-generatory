@@ -12,12 +12,14 @@ def test_pesel_uniqueness():
     table_context = {
         "used_pesels": set(),
         "gender": "M",
-        "birth_date": date(1995, 5, 5)
+        "birth_date": date(1995, 5, 5),
     }
 
     sample = 4500
 
-    print(f"-> Próba wygenerowania {sample} PESEL-i dla dokładnie tej samej daty i płci...")
+    print(
+        f"-> Próba wygenerowania {sample} PESEL-i dla dokładnie tej samej daty i płci..."
+    )
 
     start_time = time.time()
 
@@ -26,7 +28,7 @@ def test_pesel_uniqueness():
         row_context = {
             "used_pesels": table_context["used_pesels"],
             "gender": table_context["gender"],
-            "birth_date": table_context["birth_date"]
+            "birth_date": table_context["birth_date"],
         }
 
         pesel = generator.generate(context=row_context)

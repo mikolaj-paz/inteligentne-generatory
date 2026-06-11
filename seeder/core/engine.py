@@ -26,7 +26,7 @@ def _sort_schema_by_dependencies(schema: Schema) -> list[TableInfo]:
         "firma",
         "osoba",
         "konto",
-        "zatrudnienie"
+        "zatrudnienie",
     ]
 
     def get_sort_key(table: TableInfo):
@@ -38,8 +38,9 @@ def _sort_schema_by_dependencies(schema: Schema) -> list[TableInfo]:
     return sorted(schema, key=get_sort_key)
 
 
-
-def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_path) -> None:
+def run(
+    connection: sqlite3.Connection, schema: Schema, config: Config, export_path
+) -> None:
     """Main seeding loop - generate and insert data based on schema and config."""
     row_counts = _compute_row_counts(schema, config)
     pk_cache: defaultdict[str, list] = defaultdict(list)
@@ -66,18 +67,31 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
 
         # Dane są potrzebne, ale baza jest pusta -> WSTRZYKUJEMY
         if not has_teryt:
-            print("[Engine] Wykryto pustą bazę. Przełączanie w tryb masowego wstrzykiwania TERYT...")
+            print(
+                "[Engine] Wykryto pustą bazę. Przełączanie w tryb masowego wstrzykiwania TERYT..."
+            )
             try:
                 cursor.execute(f"ATTACH DATABASE '{DICT_DB_PATH}' AS dict_db")
 
                 resolved_names = {table.name for table in schema}
 
                 for table in teryt_tables:
-                    matched_name = next((name for name in resolved_names if name.lower() == table.lower()), table)
-                    cursor.execute(f"INSERT OR IGNORE INTO [{matched_name}] SELECT * FROM dict_db.[{table}]")
+                    matched_name = next(
+                        (
+                            name
+                            for name in resolved_names
+                            if name.lower() == table.lower()
+                        ),
+                        table,
+                    )
+                    cursor.execute(
+                        f"INSERT OR IGNORE INTO [{matched_name}] SELECT * FROM dict_db.[{table}]"
+                    )
 
                     if export_path:
-                        _export_teryt_table_to_sql(connection, matched_name, export_path)
+                        _export_teryt_table_to_sql(
+                            connection, matched_name, export_path
+                        )
 
                 connection.commit()
                 cursor.execute("DETACH DATABASE dict_db")
@@ -85,14 +99,17 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
                 cursor.execute("SELECT id_ulica FROM Ulica")
                 pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
             except Exception as e:
-                raise RuntimeError(f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}")
+                raise RuntimeError(
+                    f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}"
+                )
         else:
-            print("[Engine] Dane TERYT są wymagane i są już obecne w bazie. Pomijam wstrzykiwanie.")
+            print(
+                "[Engine] Dane TERYT są wymagane i są już obecne w bazie. Pomijam wstrzykiwanie."
+            )
     else:
-        print("[Engine] Konfiguracja nie wymaga danych TERYT. Pomijam sprawdzanie bazy i wstrzykiwanie.")
-
-
-
+        print(
+            "[Engine] Konfiguracja nie wymaga danych TERYT. Pomijam sprawdzanie bazy i wstrzykiwanie."
+        )
 
     explicit = {r.table_name: r for r in config}
     sorted_schema = _sort_schema_by_dependencies(schema)
@@ -105,7 +122,15 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
         if count == 0:
             continue
         request = explicit.get(table.name)
-        _seed_table(connection, table, count, request, pk_cache, company_cache, export_path=export_path)
+        _seed_table(
+            connection,
+            table,
+            count,
+            request,
+            pk_cache,
+            company_cache,
+            export_path=export_path,
+        )
 
 
 def _seed_table(
@@ -117,9 +142,7 @@ def _seed_table(
     company_cache: dict[int, str],
     export_path: str = None,
 ) -> None:
-    table_context = {
-        "used_pesels": set()
-    }
+    table_context = {"used_pesels": set()}
 
     sql_buffer = []
 
@@ -213,11 +236,11 @@ def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
             row_counts[table.name] = 0
 
     for table in schema:
-        if table.name.lower() =='rodzajumowy':
+        if table.name.lower() == "rodzajumowy":
             for column in table.columns:
-                if column.name.lower()=='nazwa':
+                if column.name.lower() == "nazwa":
                     row_counts[table.name] = 4
-                    
+
     for table in reversed(schema):
         child_count = row_counts[table.name]
         if child_count == 0:
@@ -231,7 +254,9 @@ def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
     return row_counts
 
 
-def _export_teryt_table_to_sql(connection: sqlite3.Connection, table_name: str, export_path: str) -> None:
+def _export_teryt_table_to_sql(
+    connection: sqlite3.Connection, table_name: str, export_path: str
+) -> None:
     """Fetches seeded TERYT rows and appends them to the SQL export file."""
     cursor = connection.cursor()
 
@@ -254,7 +279,9 @@ def _export_teryt_table_to_sql(connection: sqlite3.Connection, table_name: str, 
                 formatted_vals.append(str(v))
 
         vals_str = ", ".join(formatted_vals)
-        teryt_buffer.append(f"INSERT OR IGNORE INTO [{table_name}] ({cols_str}) VALUES ({vals_str});")
+        teryt_buffer.append(
+            f"INSERT OR IGNORE INTO [{table_name}] ({cols_str}) VALUES ({vals_str});"
+        )
 
     if teryt_buffer:
         with open(export_path, "a", encoding="utf-8") as f:

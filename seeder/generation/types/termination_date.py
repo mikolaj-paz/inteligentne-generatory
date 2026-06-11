@@ -8,9 +8,7 @@ class TerminationDateGenerator(BaseGenerator):
     name = "data_zwolnienia"
 
     @override
-    def generate(
-        self, context: dict | None = None, **kwargs
-    ) -> datetime | None:
+    def generate(self, context: dict | None = None, **kwargs) -> datetime | None:
         ctx = context if context is not None else {}
 
         if random.random() < 0.7:

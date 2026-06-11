@@ -21,24 +21,17 @@ def run_test(n=100):
         industry = row_data["_industry"]
         company_cache[company_id] = industry
 
-        results.append({
-            "company_id": company_id,
-            "company": company_name,
-            "industry": industry
-        })
+        results.append(
+            {"company_id": company_id, "company": company_name, "industry": industry}
+        )
 
     # 2. generujemy zatrudnienia
     print("\n=== EMPLOYMENT TEST ===\n")
 
     for company_id in range(1, n + 1):
-        row_data = {
-            "firma_id": company_id
-        }
+        row_data = {"firma_id": company_id}
 
-        context = {
-            "row_data": row_data,
-            "company_cache": company_cache
-        }
+        context = {"row_data": row_data, "company_cache": company_cache}
 
         position = position_gen.generate(context)
 
@@ -47,9 +40,9 @@ def run_test(n=100):
 
         print(f"Firma {company_id} ({industry}) -> {position}")
 
-        assert position in allowed_positions, (
-            f"BŁĄD: {position} nie pasuje do {industry}"
-        )
+        assert (
+            position in allowed_positions
+        ), f"BŁĄD: {position} nie pasuje do {industry}"
 
     print("\nOK: wszystkie stanowiska zgodne z branżami")
 

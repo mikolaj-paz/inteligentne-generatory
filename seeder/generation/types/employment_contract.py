@@ -11,18 +11,20 @@ class EmploymentContractGenerator(BaseGenerator):
         "Umowa o pracę",
         "Umowa o dzieło",
         "Umowa zlecenie",
-        "Kontrakt B2B"
+        "Kontrakt B2B",
     ]
 
     _global_index = 0
 
     @override
     def generate(
-            self,
-            context: dict | None = None,
+        self,
+        context: dict | None = None,
     ) -> str:
         """Generate a random Polish employment contract type."""
-        contract = self._CONTRACT_TYPES[EmploymentContractGenerator._global_index % len(self._CONTRACT_TYPES)]
+        contract = self._CONTRACT_TYPES[
+            EmploymentContractGenerator._global_index % len(self._CONTRACT_TYPES)
+        ]
         EmploymentContractGenerator._global_index += 1
 
         return contract

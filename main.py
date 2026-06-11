@@ -35,7 +35,6 @@ from seeder.models import Config, Schema
     type=click.Path(writable=True),
     help="Path to export the generated data as an SQL script.",
 )
-
 def main(config_path, db_path, dry_run, export_path) -> None:
     try:
         requests = load_config(config_path)
@@ -133,7 +132,11 @@ def _export_schema_to_sql(export_path: str, schema: Schema) -> None:
                     foreign_keys_sql.append(fk_def)
 
             all_elements = columns_sql + foreign_keys_sql
-            create_stmt = f"CREATE TABLE IF NOT EXISTS [{table.name}] (\n" + ",\n".join(all_elements) + "\n);\n\n"
+            create_stmt = (
+                f"CREATE TABLE IF NOT EXISTS [{table.name}] (\n"
+                + ",\n".join(all_elements)
+                + "\n);\n\n"
+            )
             f.write(create_stmt)
 
         f.write("PRAGMA foreign_keys = ON;\n")

@@ -2,6 +2,7 @@ import random
 from typing import override
 from seeder.generation.base import BaseGenerator
 
+
 class FlatNumber(BaseGenerator):
     name = "numer_mieszkania"
 

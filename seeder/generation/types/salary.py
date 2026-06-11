@@ -1,6 +1,7 @@
 import random
 from seeder.generation.base import BaseGenerator
 
+
 class SalaryGenerator(BaseGenerator):
     name = "wynagrodzenie"
 

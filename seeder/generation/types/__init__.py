@@ -21,7 +21,7 @@ from seeder.generation.types import (
     salary,
     employment_contract,
     hire_date,
-    termination_date
+    termination_date,
 )
 
 __all__ = [

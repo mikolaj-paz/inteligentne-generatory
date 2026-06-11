@@ -18,7 +18,7 @@ INDUSTRY = [
     "MARKETING",
     "MEDIA",
     "ENERGETYKA",
-    "ADMINISTRACJA"
+    "ADMINISTRACJA",
 ]
 
 INDUSTRY_POSITIONS = {
@@ -29,144 +29,108 @@ INDUSTRY_POSITIONS = {
         "DevOps Engineer",
         "QA Engineer",
         "Analityk systemowy",
-        "Architekt oprogramowania"
+        "Architekt oprogramowania",
     ],
-
     "FINANSE": [
         "Analityk finansowy",
         "Księgowy",
         "Kontroler finansowy",
         "Doradca inwestycyjny",
-        "Audytor"
+        "Audytor",
     ],
-
     "BANKOWOSC": [
         "Doradca klienta",
         "Analityk kredytowy",
         "Specjalista ds. ryzyka",
         "Kasjer bankowy",
-        "Manager oddziału"
+        "Manager oddziału",
     ],
-
     "UBEZPIECZENIA": [
         "Agent ubezpieczeniowy",
         "Underwriter",
         "Specjalista ds. likwidacji szkód",
-        "Doradca klienta"
+        "Doradca klienta",
     ],
-
     "MEDYCYNA": [
         "Lekarz",
         "Pielęgniarka",
         "Ratownik medyczny",
         "Fizjoterapeuta",
-        "Technik medyczny"
+        "Technik medyczny",
     ],
-
-    "FARMACJA": [
-        "Farmaceuta",
-        "Technolog farmaceutyczny",
-        "Przedstawiciel medyczny"
-    ],
-
-    "EDUKACJA": [
-        "Nauczyciel",
-        "Wykładowca",
-        "Pedagog",
-        "Dyrektor szkoły"
-    ],
-
+    "FARMACJA": ["Farmaceuta", "Technolog farmaceutyczny", "Przedstawiciel medyczny"],
+    "EDUKACJA": ["Nauczyciel", "Wykładowca", "Pedagog", "Dyrektor szkoły"],
     "BUDOWNICTWO": [
         "Inżynier budowy",
         "Kierownik budowy",
         "Elektryk",
         "Hydraulik",
-        "Murarz"
+        "Murarz",
     ],
-
     "NIEUCHOMOSCI": [
         "Agent nieruchomości",
         "Doradca ds. nieruchomości",
-        "Zarządca nieruchomości"
+        "Zarządca nieruchomości",
     ],
-
-    "TRANSPORT": [
-        "Kierowca",
-        "Spedytor",
-        "Logistyk",
-        "Dyspozytor"
-    ],
-
+    "TRANSPORT": ["Kierowca", "Spedytor", "Logistyk", "Dyspozytor"],
     "LOGISTYKA": [
         "Specjalista ds. logistyki",
         "Planista łańcucha dostaw",
         "Magazynier",
-        "Koordynator transportu"
+        "Koordynator transportu",
     ],
-
     "PRODUKCJA": [
         "Operator maszyn",
         "Inżynier produkcji",
         "Kontroler jakości",
-        "Technolog produkcji"
+        "Technolog produkcji",
     ],
-
-    "HANDEL": [
-        "Sprzedawca",
-        "Kierownik sklepu",
-        "Przedstawiciel handlowy",
-        "Kasjer"
-    ],
-
+    "HANDEL": ["Sprzedawca", "Kierownik sklepu", "Przedstawiciel handlowy", "Kasjer"],
     "E-COMMERCE": [
         "Specjalista e-commerce",
         "Manager sklepu internetowego",
-        "Analityk sprzedaży online"
+        "Analityk sprzedaży online",
     ],
-
-    "GASTRONOMIA": [
-        "Kucharz",
-        "Kelner",
-        "Manager restauracji",
-        "Barista"
-    ],
-
+    "GASTRONOMIA": ["Kucharz", "Kelner", "Manager restauracji", "Barista"],
     "TURYSTYKA": [
         "Pilot wycieczek",
         "Rezydent",
         "Specjalista ds. turystyki",
-        "Recepcjonista"
+        "Recepcjonista",
     ],
-
     "MARKETING": [
         "Specjalista marketingu",
         "Social Media Manager",
         "SEO Specialist",
-        "Copywriter"
+        "Copywriter",
     ],
-
-    "MEDIA": [
-        "Dziennikarz",
-        "Redaktor",
-        "Operator kamery",
-        "Producent treści"
-    ],
-
-    "ENERGETYKA": [
-        "Inżynier energetyki",
-        "Operator sieci",
-        "Technik energetyczny"
-    ],
-
-    "ADMINISTRACJA": [
-        "Urzędnik",
-        "Specjalista administracyjny",
-        "Asystent biura"
-    ]
+    "MEDIA": ["Dziennikarz", "Redaktor", "Operator kamery", "Producent treści"],
+    "ENERGETYKA": ["Inżynier energetyki", "Operator sieci", "Technik energetyczny"],
+    "ADMINISTRACJA": ["Urzędnik", "Specjalista administracyjny", "Asystent biura"],
 }
 
-TECH_PREFIX = ["Quantum", "Byte", "Alpha", "Cyber", "Nova", "Apex", "Matrix", "Vanguard", "Delta", "Nexus"]
-CORP_SUFFIX = ["Solutions", "Group", "Systems", "Pro", "Global", "Hub", "Center", "Enterprise"]
+TECH_PREFIX = [
+    "Quantum",
+    "Byte",
+    "Alpha",
+    "Cyber",
+    "Nova",
+    "Apex",
+    "Matrix",
+    "Vanguard",
+    "Delta",
+    "Nexus",
+]
+CORP_SUFFIX = [
+    "Solutions",
+    "Group",
+    "Systems",
+    "Pro",
+    "Global",
+    "Hub",
+    "Center",
+    "Enterprise",
+]
 COLOR_PREFIX = ["Gold", "Silver", "Purple", "Blue", "Green", "Red", "White", "Black"]
 POL_SUFFIX = ["pol", "bud", "trans", "med", "ex", "mex", "stal", "plast"]
 
@@ -176,132 +140,252 @@ INDUSTRY_PATTERNS = {
         "tech": TECH_PREFIX,
         "soft": ["Soft", "Code", "Crafters", "Dev", "Net", "Link", "Grid", "Ware"],
         "color": COLOR_PREFIX,
-        "corp": CORP_SUFFIX
+        "corp": CORP_SUFFIX,
     },
     "FINANSE": {
-        "templates": ["{prefix} Finance", "{prefix} {corp}", "{pl_adj} Biuro Rachunkowe", "Centrum Księgowe {pl_noun}"],
-        "prefix": ["Apex", "Gold", "Profit", "Finexo", "Vanguard", "Capital", "Balance", "Tax"],
+        "templates": [
+            "{prefix} Finance",
+            "{prefix} {corp}",
+            "{pl_adj} Biuro Rachunkowe",
+            "Centrum Księgowe {pl_noun}",
+        ],
+        "prefix": [
+            "Apex",
+            "Gold",
+            "Profit",
+            "Finexo",
+            "Vanguard",
+            "Capital",
+            "Balance",
+            "Tax",
+        ],
         "pl_adj": ["Złote", "Pewne", "Profesjonalne", "Nowoczesne", "Rzetelne"],
         "pl_noun": ["Aktywa", "Zysk", "Konto", "Bilans", "Moneta"],
-        "corp": ["Group", "Auditing", "Taxes", "Advisors"]
+        "corp": ["Group", "Auditing", "Taxes", "Advisors"],
     },
     "BANKOWOSC": {
         "templates": ["{prefix} Bank", "Bank {pl_noun_geo}", "{geo} Trust Bank"],
         "prefix": ["Premium", "Apex", "Horizon", "Nordic", "Crest", "Vertex"],
         "pl_noun_geo": ["Silesia", "Polski", "Rozwoju", "Kredytowy", "Depozytowy"],
-        "geo": ["Silesia", "Baltic", "Vistula", "Central", "Global"]
+        "geo": ["Silesia", "Baltic", "Vistula", "Central", "Global"],
     },
     "UBEZPIECZENIA": {
-        "templates": ["{prefix} Insurance", "{pl_adj} Krok Ubezpieczenia", "{prefix} Group", "Ubezpieczenia {pl_noun}"],
+        "templates": [
+            "{prefix} Insurance",
+            "{pl_adj} Krok Ubezpieczenia",
+            "{prefix} Group",
+            "Ubezpieczenia {pl_noun}",
+        ],
         "prefix": ["SafeLife", "Secura", "Shield", "Guard", "Aegis", "Assure"],
         "pl_adj": ["Pewny", "Bezpieczny", "Dobry", "Spokojny"],
-        "pl_noun": ["Tarcza", "Polisa", "Parasol", "Ostoja", "MegaPolis"]
+        "pl_noun": ["Tarcza", "Polisa", "Parasol", "Ostoja", "MegaPolis"],
     },
     "MEDYCYNA": {
-        "templates": ["{color}Care", "Premium{med}", "{med}ica Center", "Centrum Medyczne {pl_noun}", "{prefix} Clinic"],
+        "templates": [
+            "{color}Care",
+            "Premium{med}",
+            "{med}ica Center",
+            "Centrum Medyczne {pl_noun}",
+            "{prefix} Clinic",
+        ],
         "color": COLOR_PREFIX,
         "med": ["MED", "Care", "Vita", "Health", "Cure"],
         "pl_noun": ["Zdrowie", "Vita", "ArsMedica", "Eskulap", "Nasze Zdrowie"],
-        "prefix": ["Nova", "Alpha", "Apex", "Omni", "Vital"]
+        "prefix": ["Nova", "Alpha", "Apex", "Omni", "Vital"],
     },
     "FARMACJA": {
-        "templates": ["{prefix}Pharma", "{prefix} Labs", "Apteka {pl_adj}", "{prefix} Therapeutics"],
-        "prefix": ["Galen", "BioMedica", "PharmaVital", "Aura", "Polpharma", "Synteza", "Cepha"],
-        "pl_adj": ["Słoneczna", "Dbam o Zdrowie", "Rodzinna", "Zielona", "Bliska"]
+        "templates": [
+            "{prefix}Pharma",
+            "{prefix} Labs",
+            "Apteka {pl_adj}",
+            "{prefix} Therapeutics",
+        ],
+        "prefix": [
+            "Galen",
+            "BioMedica",
+            "PharmaVital",
+            "Aura",
+            "Polpharma",
+            "Synteza",
+            "Cepha",
+        ],
+        "pl_adj": ["Słoneczna", "Dbam o Zdrowie", "Rodzinna", "Zielona", "Bliska"],
     },
     "EDUKACJA": {
-        "templates": ["{prefix}Academy", "Szkoła Językowa {lingua}", "{prefix} Learning", "Centrum Edukacyjne {mentor}"],
+        "templates": [
+            "{prefix}Academy",
+            "Szkoła Językowa {lingua}",
+            "{prefix} Learning",
+            "Centrum Edukacyjne {mentor}",
+        ],
         "prefix": ["Edu", "Smart", "Alpha", "Skill", "Brain"],
         "lingua": ["Lingua", "Dialogue", "Accent", "Word", "Polyglot"],
-        "mentor": ["Mentor", "Pitagoras", "Socrates", "Azymut", "Atena"]
+        "mentor": ["Mentor", "Pitagoras", "Socrates", "Azymut", "Atena"],
     },
     "BUDOWNICTWO": {
-        "templates": ["Zakład Budowlany {cegla}", "{root}{bud}", "Solidny {dom}", "{prefix} Construction"],
+        "templates": [
+            "Zakład Budowlany {cegla}",
+            "{root}{bud}",
+            "Solidny {dom}",
+            "{prefix} Construction",
+        ],
         "cegla": ["Cegiełka", "Pion", "Kielnia", "Fundament", "Mur"],
         "root": ["Bud", "Max", "Stal", "Remo", "Inter", "Pol"],
         "bud": POL_SUFFIX,
         "dom": ["Dom", "Dach", "Mur", "Filar"],
-        "prefix": ["Apex", "Solid", "Concrete", "Iron", "Vanguard"]
+        "prefix": ["Apex", "Solid", "Concrete", "Iron", "Vanguard"],
     },
     "NIEUCHOMOSCI": {
-        "templates": ["{prefix} Estates", "{root} Nieruchomości", "{prefix} Development", "{prefix} Properties"],
-        "prefix": ["HomeSweetHome", "Apex", "Horizon", "Lider", "Metraż", "Prime", "Urban"],
-        "root": ["Inwest", "Dom", "Lider", "Lokum", "Działka"]
+        "templates": [
+            "{prefix} Estates",
+            "{root} Nieruchomości",
+            "{prefix} Development",
+            "{prefix} Properties",
+        ],
+        "prefix": [
+            "HomeSweetHome",
+            "Apex",
+            "Horizon",
+            "Lider",
+            "Metraż",
+            "Prime",
+            "Urban",
+        ],
+        "root": ["Inwest", "Dom", "Lider", "Lokum", "Działka"],
     },
     "TRANSPORT": {
-        "templates": ["Firma Transportowa {auto}", "{name}{trans}", "{prefix}Freight", "{prefix}Express"],
+        "templates": [
+            "Firma Transportowa {auto}",
+            "{name}{trans}",
+            "{prefix}Freight",
+            "{prefix}Express",
+        ],
         "auto": ["Samochodzik", "Koło", "Szosa", "Strzała", "TIR"],
         "name": ["Bodzio", "Jan", "Pol", "Euro", "Speed", "Mega", "Log"],
         "trans": ["Trans", "Pol", "Way", "Cargo"],
-        "prefix": ["Speedy", "Cargo", "Global", "Apex", "Route"]
+        "prefix": ["Speedy", "Cargo", "Global", "Apex", "Route"],
     },
     "LOGISTYKA": {
-        "templates": ["Logi{center}", "{prefix} Chain", "Magazyn {plus}", "{prefix} Log"],
+        "templates": [
+            "Logi{center}",
+            "{prefix} Chain",
+            "Magazyn {plus}",
+            "{prefix} Log",
+        ],
         "center": ["Centrum", "Hub", "Point", "Zone", "Nexus"],
         "prefix": ["Supply", "Inter", "Global", "Euro", "Flex", "Smart"],
-        "plus": ["Plus", "Pro", "Max", "360"]
+        "plus": ["Plus", "Pro", "Max", "360"],
     },
     "PRODUKCJA": {
-        "templates": ["Fabryka Elementów {metal}", "{prefix} Manufacturing", "{root} Production", "Zakłady Mechaniczne {precyzja}"],
+        "templates": [
+            "Fabryka Elementów {metal}",
+            "{prefix} Manufacturing",
+            "{root} Production",
+            "Zakłady Mechaniczne {precyzja}",
+        ],
         "metal": ["Metalowych", "Plastikowych", "Stalowych", "Drewnianych"],
         "prefix": ["Apex", "EcoPlast", "TechnoParts", "Indu", "Heavy"],
         "root": ["Stalex", "PlastPol", "WoodMech", "Fabri"],
-        "precyzja": ["Precyzja", "Napęd", "Obrót", "Koło"]
+        "precyzja": ["Precyzja", "Napęd", "Obrót", "Koło"],
     },
     "HANDEL": {
-        "templates": ["Hurtownia Wielobranżowa {partner}", "{prefix}Market", "{prefix} Trade Co.", "{prefix} Retail Group"],
+        "templates": [
+            "Hurtownia Wielobranżowa {partner}",
+            "{prefix}Market",
+            "{prefix} Trade Co.",
+            "{prefix} Retail Group",
+        ],
         "partner": ["Partner", "Sukces", "A-Z", "Globus"],
-        "prefix": ["Mega", "Global", "Apex", "Prime", "Maxi", "Super"]
+        "prefix": ["Mega", "Global", "Apex", "Prime", "Maxi", "Super"],
     },
     "E-COMMERCE": {
-        "templates": ["{prefix}Shop", "{prefix}Mall", "E-{zakupy}", "{prefix}Cart", "Click{buy}"],
+        "templates": [
+            "{prefix}Shop",
+            "{prefix}Mall",
+            "E-{zakupy}",
+            "{prefix}Cart",
+            "Click{buy}",
+        ],
         "prefix": ["Cyber", "Web", "Trendy", "Apex", "Fast", "Smart", "Net"],
         "zakupy": ["Zakupy", "Sklep", "Koszyk", "Paka"],
-        "buy": ["Buy", "Cart", "Shop", "Pick"]
+        "buy": ["Buy", "Cart", "Shop", "Pick"],
     },
     "GASTRONOMIA": {
-        "templates": ["Restauracja Pod {jablko}", "{aroma} Cafe", "{smak} Gastro", "Bistro Na {widelcu}"],
+        "templates": [
+            "Restauracja Pod {jablko}",
+            "{aroma} Cafe",
+            "{smak} Gastro",
+            "Bistro Na {widelcu}",
+        ],
         "jablko": ["Jabłonią", "Dębem", "Złotą Kaczką", "Mnichem", "Słońcem"],
         "aroma": ["Aroma", "Coffee", "Bean", "Sweet", "Daily"],
         "smak": ["Smakosz", "Kociołek", "Złoty", "Pycha"],
-        "widelcu": ["Widelcu", "Talerzu", "Ogniu", "Fali"]
+        "widelcu": ["Widelcu", "Talerzu", "Ogniu", "Fali"],
     },
     "TURYSTYKA": {
-        "templates": ["Biuro Podróży {slonce}", "{prefix} Travel", "{prefix} Voyages", "{pl_adj} Szlaki"],
+        "templates": [
+            "Biuro Podróży {slonce}",
+            "{prefix} Travel",
+            "{prefix} Voyages",
+            "{pl_adj} Szlaki",
+        ],
         "slonce": ["Słoneczne Wakacje", "Oaza", "Palma", "Przygoda"],
         "prefix": ["Horizon", "Global", "Apex", "Aura", "Compass", "Voyage"],
-        "pl_adj": ["Polskie", "Dzikie", "Górskie", "Leśne"]
+        "pl_adj": ["Polskie", "Dzikie", "Górskie", "Leśne"],
     },
     "MARKETING": {
-        "templates": ["{creative} Agency", "{brand}Masters", "{prefix} Marketing", "{target} Media"],
+        "templates": [
+            "{creative} Agency",
+            "{brand}Masters",
+            "{prefix} Marketing",
+            "{target} Media",
+        ],
         "creative": ["Creative", "Spark", "Pixel", "Brainstorm", "Fresh"],
         "brand": ["Brand", "Ad", "Concept", "Market"],
         "prefix": ["AdVantage", "Target", "SocialVibe", "Buzz", "Growth"],
-        "target": ["Target", "Pixel", "Wave", "Signal"]
+        "target": ["Target", "Pixel", "Wave", "Signal"],
     },
     "MEDIA": {
-        "templates": ["{prefix}Media Group", "Telewizja {reg}", "{nowe} Studio", "{prefix} Content"],
+        "templates": [
+            "{prefix}Media Group",
+            "Telewizja {reg}",
+            "{nowe} Studio",
+            "{prefix} Content",
+        ],
         "prefix": ["Info", "Wave", "Prime", "Vivid", "Nova", "Echo"],
         "reg": ["Regionalna", "Lokalna", "Internetowa", "Plus"],
-        "nowe": ["Nowe", "Wizja", "Kadr", "Flesz"]
+        "nowe": ["Nowe", "Wizja", "Kadr", "Flesz"],
     },
     "ENERGETYKA": {
-        "templates": ["{eco}Energy", "{zielony} Prąd", "{prefix}Power", "{solar}Systems"],
+        "templates": [
+            "{eco}Energy",
+            "{zielony} Prąd",
+            "{prefix}Power",
+            "{solar}Systems",
+        ],
         "eco": ["Eco", "Volt", "Bio", "Geo", "Pure"],
         "zielony": ["Zielony", "Czysty", "Eko", "Dobry"],
         "prefix": ["Volt", "Electro", "Apex", "Watt", "Grid"],
-        "solar": ["Solar", "Wind", "Hydro", "Thermo"]
+        "solar": ["Solar", "Wind", "Hydro", "Thermo"],
     },
     "ADMINISTRACJA": {
-        "templates": ["Kancelaria Administracyjna {biuro}", "{prefix} Services", "Centrum Obsługi {biznesu}", "{prefix}Support"],
+        "templates": [
+            "Kancelaria Administracyjna {biuro}",
+            "{prefix} Services",
+            "Centrum Obsługi {biznesu}",
+            "{prefix}Support",
+        ],
         "biuro": ["BiuroPlus", "Lex", "Paragraf", "Filar"],
         "prefix": ["Apex Corporate", "Admin", "Office", "Secur", "Pro"],
-        "biznesu": ["Biznesu", "Firm", "Klienta", "Spółek"]
-    }
+        "biznesu": ["Biznesu", "Firm", "Klienta", "Spółek"],
+    },
 }
 
 POLISH_BANKS = [
-    {"nazwa": "Powszechna Kasa Oszczędności Bank Polski SA (w tym Inteligo)", "kod_rozliczeniowy": "1020"},
+    {
+        "nazwa": "Powszechna Kasa Oszczędności Bank Polski SA (w tym Inteligo)",
+        "kod_rozliczeniowy": "1020",
+    },
     {"nazwa": "Bank Polska Kasa Opieki SA (Pekao)", "kod_rozliczeniowy": "1240"},
     {"nazwa": "Santander Bank Polska SA", "kod_rozliczeniowy": "1090"},
     {"nazwa": "mBank SA", "kod_rozliczeniowy": "1140"},
@@ -309,7 +393,10 @@ POLISH_BANKS = [
     {"nazwa": "BNP Paribas Bank Polska SA", "kod_rozliczeniowy": "1600"},
     {"nazwa": "Bank Millennium SA", "kod_rozliczeniowy": "1160"},
     {"nazwa": "Alior Bank SA", "kod_rozliczeniowy": "2490"},
-    {"nazwa": "Bank Handlowy w Warszawie SA (Citi Handlowy)", "kod_rozliczeniowy": "1030"},
+    {
+        "nazwa": "Bank Handlowy w Warszawie SA (Citi Handlowy)",
+        "kod_rozliczeniowy": "1030",
+    },
     {"nazwa": "VeloBank SA", "kod_rozliczeniowy": "1560"},
     {"nazwa": "Credit Agricole Bank Polska SA", "kod_rozliczeniowy": "1940"},
     {"nazwa": "Deutsche Bank Polska SA", "kod_rozliczeniowy": "1910"},
