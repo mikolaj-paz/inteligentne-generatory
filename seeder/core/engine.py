@@ -212,6 +212,12 @@ def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
         if table.name not in row_counts:
             row_counts[table.name] = 0
 
+    for table in schema:
+        if table.name.lower() =='rodzajumowy':
+            for column in table.columns:
+                if column.name.lower()=='nazwa':
+                    row_counts[table.name] = 4
+                    
     for table in reversed(schema):
         child_count = row_counts[table.name]
         if child_count == 0:

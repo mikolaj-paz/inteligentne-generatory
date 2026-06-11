@@ -18,7 +18,8 @@ from seeder.generation.types import (
     flat_number,
     bank,
     balance,
-    salary
+    salary,
+    employment_contract
 )
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "bank",
     "balance",
     "salary",
+    "employment_contract",
 ]
