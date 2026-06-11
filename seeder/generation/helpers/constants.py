@@ -299,3 +299,29 @@ INDUSTRY_PATTERNS = {
         "biznesu": ["Biznesu", "Firm", "Klienta", "Spółek"]
     }
 }
+
+POLISH_BANKS = [
+    {"nazwa": "Powszechna Kasa Oszczędności Bank Polski SA (w tym Inteligo)", "kod_rozliczeniowy": "1020"},
+    {"nazwa": "Bank Polska Kasa Opieki SA (Pekao)", "kod_rozliczeniowy": "1240"},
+    {"nazwa": "Santander Bank Polska SA", "kod_rozliczeniowy": "1090"},
+    {"nazwa": "mBank SA", "kod_rozliczeniowy": "1140"},
+    {"nazwa": "ING Bank Śląski SA", "kod_rozliczeniowy": "1050"},
+    {"nazwa": "BNP Paribas Bank Polska SA", "kod_rozliczeniowy": "1600"},
+    {"nazwa": "Bank Millennium SA", "kod_rozliczeniowy": "1160"},
+    {"nazwa": "Alior Bank SA", "kod_rozliczeniowy": "2490"},
+    {"nazwa": "Bank Handlowy w Warszawie SA (Citi Handlowy)", "kod_rozliczeniowy": "1030"},
+    {"nazwa": "VeloBank SA", "kod_rozliczeniowy": "1560"},
+    {"nazwa": "Credit Agricole Bank Polska SA", "kod_rozliczeniowy": "1940"},
+    {"nazwa": "Deutsche Bank Polska SA", "kod_rozliczeniowy": "1910"},
+    {"nazwa": "SGB-Bank SA", "kod_rozliczeniowy": "1610"},
+    {"nazwa": "Bank Polskiej Spółdzielczości SA", "kod_rozliczeniowy": "1930"},
+    {"nazwa": "Bank Ochrony Środowiska SA (BOŚ)", "kod_rozliczeniowy": "1540"},
+    {"nazwa": "Santander Consumer Bank SA", "kod_rozliczeniowy": "1320"},
+    {"nazwa": "Bank BPH SA", "kod_rozliczeniowy": "1060"},
+    {"nazwa": "Bank Pocztowy SA", "kod_rozliczeniowy": "1320"},
+    {"nazwa": "Nest Bank SA", "kod_rozliczeniowy": "1870"},
+    {"nazwa": "Toyota Bank Polska SA", "kod_rozliczeniowy": "2160"},
+    {"nazwa": "DNB Bank Polska SA", "kod_rozliczeniowy": "2190"},
+    {"nazwa": "Bank Nowy SA", "kod_rozliczeniowy": "2480"},
+    {"nazwa": "Plus Bank SA", "kod_rozliczeniowy": "1680"},
+]
