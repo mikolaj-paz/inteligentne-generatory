@@ -66,6 +66,21 @@ def _fetch_existing_map(connection: sqlite3.Connection, table_name: str, key_col
     return mapping
 
 
+def _fetch_existing_pesels(connection: sqlite3.Connection, schema: Schema) -> set[str]:
+    existing_pesels = set()
+    cursor = connection.cursor()
+    for table in schema:
+        for column in table.columns:
+            if column.name.lower() == "pesel":
+                try:
+                    cursor.execute(f"SELECT [{column.name}] FROM [{table.name}] WHERE [{column.name}] IS NOT NULL")
+                    for row in cursor.fetchall():
+                        existing_pesels.add(str(row[0]).strip())
+                except sqlite3.OperationalError:
+                    pass
+    return existing_pesels
+
+
 def _seed_teryt_with_strict_mapping(connection: sqlite3.Connection, target_count: int, pk_cache: defaultdict,
                                     export_path: str | None) -> None:
     raw_paths = _load_teryt_paths_from_dict(target_count)
@@ -164,6 +179,7 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
     pk_cache = defaultdict(list)
     company_cache = {}
 
+    global_used_pesels = _fetch_existing_pesels(connection, schema)
     teryt_tables = ["wojewodztwo", "powiat", "gmina", "miejscowosc", "ulica"]
 
     target_address_count = row_counts.get("Adres", row_counts.get("Ulica", 50))
@@ -180,18 +196,17 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
         if count == 0:
             continue
         request = explicit.get(table.name)
-        _seed_table(connection, table, count, request, pk_cache, company_cache, export_path)
+        _seed_table(connection, table, count, request, pk_cache, company_cache, global_used_pesels, export_path)
 
 
 def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count: int, request: SeederRequest | None,
-                pk_cache: defaultdict, company_cache: dict, export_path: str = None) -> None:
-    table_context = {"used_pesels": set()}
+                pk_cache: defaultdict, company_cache: dict, global_used_pesels: set, export_path: str = None) -> None:
     sql_buffer = []
 
     with tqdm(total=row_count, desc=table_info.name, unit="row") as pbar:
         for _ in range(row_count):
             row_data = {}
-            row_context = {"used_pesels": table_context["used_pesels"], "row_data": row_data,
+            row_context = {"used_pesels": global_used_pesels, "row_data": row_data,
                            "company_cache": company_cache}
 
             for column in table_info.columns:
@@ -208,6 +223,11 @@ def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count
                 row_data[column.name] = generate_value(column, override, row_context, table_info.name)
 
             filtered = {k: v for k, v in row_data.items() if v is not None and not k.startswith("_")}
+
+            for col_name, col_val in filtered.items():
+                if col_name.lower() == "pesel" and col_val:
+                    global_used_pesels.add(str(col_val).strip())
+
             cols = ", ".join(filtered.keys())
             placeholders = ", ".join(["?"] * len(filtered))
             sql = f"INSERT INTO [{table_info.name}] ({cols}) VALUES ({placeholders})"
