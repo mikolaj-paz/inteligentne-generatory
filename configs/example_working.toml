@@ -1,8 +1,8 @@
 [Osoba]
-rows = 150
+rows = 150000
 
 [Adres]
-rows = 200
+rows = 100000
 
 [Zatrudnienie]
 rows = 100

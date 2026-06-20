@@ -1,12 +1,10 @@
 import os
-from collections import defaultdict
 import random
 import sqlite3
-
+from collections import defaultdict
 from tqdm import tqdm
-
 from seeder.generation.generators import generate_value
-from seeder.models import ColumnInfo, Schema, Config, SeederRequest, TableInfo
+from seeder.models import Schema, Config, SeederRequest, TableInfo
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
@@ -14,212 +12,225 @@ DICT_DB_PATH = os.path.join(PROJECT_ROOT, "databases", "dictionary.db")
 
 
 def _sort_schema_by_dependencies(schema: Schema) -> list[TableInfo]:
-    table_order = [
-        "rodzajumowy",
-        "wojewodztwo",
-        "powiat",
-        "gmina",
-        "miejscowosc",
-        "ulica",
-        "adres",
-        "bank",
-        "firma",
-        "osoba",
-        "konto",
-        "zatrudnienie",
-    ]
-
-    def get_sort_key(table: TableInfo):
-        name = table.name.lower()
-        if name in table_order:
-            return table_order.index(name)
-        return 99
-
-    return sorted(schema, key=get_sort_key)
+    table_order = ["rodzajumowy", "wojewodztwo", "powiat", "gmina", "miejscowosc", "ulica", "adres", "bank", "firma",
+                   "osoba", "konto", "zatrudnienie"]
+    return sorted(schema, key=lambda t: table_order.index(t.name.lower()) if t.name.lower() in table_order else 99)
 
 
-def run(
-    connection: sqlite3.Connection, schema: Schema, config: Config, export_path
-) -> None:
-    """Main seeding loop - generate and insert data based on schema and config."""
-    row_counts = _compute_row_counts(schema, config)
-    pk_cache: defaultdict[str, list] = defaultdict(list)
+def _load_teryt_paths_from_dict(target_count: int) -> list[sqlite3.Row]:
+    if not os.path.exists(DICT_DB_PATH):
+        raise FileNotFoundError(f"Baza dictionary.db nie istnieje w: {DICT_DB_PATH}")
 
-    teryt_tables = ["Wojewodztwo", "Powiat", "Gmina", "Miejscowosc", "Ulica"]
-    teryt_tables_lower = [t.lower() for t in teryt_tables]
+    conn = sqlite3.connect(DICT_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT MAX(id_ulica) FROM Ulica")
+    max_id = cursor.fetchone()[0] or 100000
+    random_ids = random.sample(range(1, max_id + 1), min(target_count * 2, max_id))
+
+    placeholders = ", ".join(["?"] * len(random_ids))
+    query = f"""
+        SELECT 
+            w.nazwa AS woj_nazwa, p.nazwa AS pow_nazwa,
+            g.nazwa AS gmi_nazwa, m.nazwa AS mie_nazwa, u.nazwa AS uli_nazwa
+        FROM Ulica u
+        JOIN Miejscowosc m ON u.id_miejscowosc = m.id_miejscowosc
+        JOIN Gmina g       ON m.id_gmina = g.id_gmina
+        JOIN Powiat p      ON g.id_powiat = p.id_powiat
+        JOIN Wojewodztwo w ON p.id_wojewodztwo = w.id_wojewodztwo
+        WHERE u.id_ulica IN ({placeholders})
+        LIMIT ?
+    """
+    cursor.execute(query, (*random_ids, target_count))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+
+def _fetch_existing_map(connection: sqlite3.Connection, table_name: str, key_columns: list) -> dict:
+    cursor = connection.cursor()
+    mapping = {}
+    pk_col = key_columns[0]
+
+    cols_to_select = [pk_col] + [col for col in key_columns if col != pk_col]
+    cols_str = ", ".join([f"[{c}]" for c in cols_to_select])
+
+    try:
+        cursor.execute(f"SELECT {cols_str} FROM [{table_name}]")
+        for row in cursor.fetchall():
+            biz_key = row[1] if len(row) == 2 else tuple(row[1:])
+            mapping[biz_key] = row[0]
+    except sqlite3.OperationalError:
+        pass
+    return mapping
+
+
+def _seed_teryt_with_strict_mapping(connection: sqlite3.Connection, target_count: int, pk_cache: defaultdict,
+                                    export_path: str | None) -> None:
+    raw_paths = _load_teryt_paths_from_dict(target_count)
+    sql_buffer = []
     cursor = connection.cursor()
 
-    requires_teryt = False
-    for table in schema:
-        for column in table.columns:
-            if column.name.lower() in ["id_ulica", "id_miejscowosc", "id_wojewodztwo"]:
-                requires_teryt = True
-                break
-        if requires_teryt:
-            break
+    woj_map = _fetch_existing_map(connection, "Wojewodztwo", ["id_wojewodztwo", "nazwa"])
+    pow_map = _fetch_existing_map(connection, "Powiat", ["id_powiat", "nazwa", "id_wojewodztwo"])
+    gmi_map = _fetch_existing_map(connection, "Gmina", ["id_gmina", "nazwa", "id_powiat"])
+    mie_map = _fetch_existing_map(connection, "Miejscowosc", ["id_miejscowosc", "nazwa", "id_gmina"])
+    uli_map = _fetch_existing_map(connection, "Ulica", ["id_ulica", "nazwa", "id_miejscowosc"])
 
-    if requires_teryt:
-        try:
-            cursor.execute("SELECT id_ulica FROM Ulica LIMIT 1")
-            has_teryt = cursor.fetchone() is not None
-        except sqlite3.OperationalError:
-            has_teryt = False
-
-        # Dane są potrzebne, ale baza jest pusta -> WSTRZYKUJEMY
-        if not has_teryt:
-            print(
-                "[Engine] Wykryto pustą bazę. Ładowanie danych TERYT..."
-            )
-            try:
-                cursor.execute(f"ATTACH DATABASE '{DICT_DB_PATH}' AS dict_db")
-
-                resolved_names = {table.name for table in schema}
-
-                for table in teryt_tables:
-                    matched_name = next(
-                        (
-                            name
-                            for name in resolved_names
-                            if name.lower() == table.lower()
-                        ),
-                        table,
-                    )
-                    cursor.execute(
-                        f"INSERT OR IGNORE INTO [{matched_name}] SELECT * FROM dict_db.[{table}]"
-                    )
-
-                    if export_path:
-                        _export_teryt_table_to_sql(
-                            connection, matched_name, export_path
-                        )
-
-                connection.commit()
-                cursor.execute("DETACH DATABASE dict_db")
-                print("[Engine] Ładowanie danych TERYT zakończone sukcesem.")
-            except Exception as e:
-                raise RuntimeError(
-                    f"Błąd podczas masowego zasilania bazy danymi TERYT: {e}"
-                )
+    bar_description = "TERYT (województwa, powiaty, gminy, miejscowości, ulice)"
+    for path in tqdm(raw_paths, desc=bar_description, unit="row"):
+        # 1. WOJEWÓDZTWO
+        woj_nazwa = path["woj_nazwa"]
+        if woj_nazwa not in woj_map:
+            cursor.execute("INSERT INTO [Wojewodztwo] (nazwa) VALUES (?)", (woj_nazwa,))
+            woj_id = cursor.lastrowid
+            woj_map[woj_nazwa] = woj_id
+            if export_path:
+                sql_buffer.append(
+                    f"INSERT OR IGNORE INTO [Wojewodztwo] (id_wojewodztwo, nazwa) VALUES ({woj_id}, '{woj_nazwa.replace('\'', '\'\'')}');")
         else:
-            print(
-                "[Engine] Dane TERYT są wymagane i są już obecne w bazie. Pomijam wstrzykiwanie."
-            )
-        cursor.execute("SELECT id_ulica FROM Ulica")
-        pk_cache["Ulica"] = [row[0] for row in cursor.fetchall()]
-    else:
-        print(
-            "[Engine] Konfiguracja nie wymaga danych TERYT. Pomijam sprawdzanie bazy i wstrzykiwanie."
-        )
+            woj_id = woj_map[woj_nazwa]
+        pk_cache["Wojewodztwo"].append(woj_id)
+
+        # 2. POWIAT
+        pow_nazwa = path["pow_nazwa"]
+        pow_key = (pow_nazwa, woj_id)
+        if pow_key not in pow_map:
+            cursor.execute("INSERT INTO [Powiat] (nazwa, id_wojewodztwo) VALUES (?, ?)", (pow_nazwa, woj_id))
+            pow_id = cursor.lastrowid
+            pow_map[pow_key] = pow_id
+            if export_path:
+                sql_buffer.append(
+                    f"INSERT OR IGNORE INTO [Powiat] (id_powiat, nazwa, id_wojewodztwo) VALUES ({pow_id}, '{pow_nazwa.replace('\'', '\'\'')}', {woj_id});")
+        else:
+            pow_id = pow_map[pow_key]
+        pk_cache["Powiat"].append(pow_id)
+
+        # 3. GMINA
+        gmi_nazwa = path["gmi_nazwa"]
+        gmi_key = (gmi_nazwa, pow_id)
+        if gmi_key not in gmi_map:
+            cursor.execute("INSERT INTO [Gmina] (nazwa, id_powiat) VALUES (?, ?)", (gmi_nazwa, pow_id))
+            gmi_id = cursor.lastrowid
+            gmi_map[gmi_key] = gmi_id
+            if export_path:
+                sql_buffer.append(
+                    f"INSERT OR IGNORE INTO [Gmina] (id_gmina, nazwa, id_powiat) VALUES ({gmi_id}, '{gmi_nazwa.replace('\'', '\'\'')}', {pow_id});")
+        else:
+            gmi_id = gmi_map[gmi_key]
+        pk_cache["Gmina"].append(gmi_id)
+
+        # 4. MIEJSCOWOŚĆ
+        mie_nazwa = path["mie_nazwa"]
+        mie_key = (mie_nazwa, gmi_id)
+        if mie_key not in mie_map:
+            cursor.execute("INSERT INTO [Miejscowosc] (nazwa, id_gmina) VALUES (?, ?)", (mie_nazwa, gmi_id))
+            mie_id = cursor.lastrowid
+            mie_map[mie_key] = mie_id
+            if export_path:
+                sql_buffer.append(
+                    f"INSERT OR IGNORE INTO [Miejscowosc] (id_miejscowosc, nazwa, id_gmina) VALUES ({mie_id}, '{mie_nazwa.replace('\'', '\'\'')}', {gmi_id});")
+        else:
+            mie_id = mie_map[mie_key]
+        pk_cache["Miejscowosc"].append(mie_id)
+
+        # 5. ULICA
+        uli_nazwa = path["uli_nazwa"]
+        uli_key = (uli_nazwa, mie_id)
+        if uli_key not in uli_map:
+            cursor.execute("INSERT INTO [Ulica] (nazwa, id_miejscowosc) VALUES (?, ?)", (uli_nazwa, mie_id))
+            uli_id = cursor.lastrowid
+            uli_map[uli_key] = uli_id
+            if export_path:
+                sql_buffer.append(
+                    f"INSERT OR IGNORE INTO [Ulica] (id_ulica, nazwa, id_miejscowosc) VALUES ({uli_id}, '{uli_nazwa.replace('\'', '\'\'')}', {mie_id});")
+        else:
+            uli_id = uli_map[uli_key]
+        pk_cache["Ulica"].append(uli_id)
+
+    connection.commit()
+
+    for table_name in pk_cache:
+        pk_cache[table_name] = list(set(pk_cache[table_name]))
+
+    if export_path and sql_buffer:
+        with open(export_path, "a", encoding="utf-8") as f:
+            f.write("\n-- Spójne Dane TERYT \n" + "\n".join(sql_buffer) + "\n")
+
+
+def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_path) -> None:
+    row_counts = _compute_row_counts(schema, config)
+    pk_cache = defaultdict(list)
+    company_cache = {}
+
+    teryt_tables = ["wojewodztwo", "powiat", "gmina", "miejscowosc", "ulica"]
+
+    target_address_count = row_counts.get("Adres", row_counts.get("Ulica", 50))
+    _seed_teryt_with_strict_mapping(connection, target_address_count, pk_cache, export_path)
 
     explicit = {r.table_name: r for r in config}
     sorted_schema = _sort_schema_by_dependencies(schema)
-    company_cache: dict[int, str] = {}
 
     for table in sorted_schema:
-        if table.name.lower() in teryt_tables_lower:
+        if table.name.lower() in teryt_tables:
             continue
+
         count = row_counts.get(table.name, 0)
         if count == 0:
             continue
         request = explicit.get(table.name)
-        _seed_table(
-            connection,
-            table,
-            count,
-            request,
-            pk_cache,
-            company_cache,
-            export_path=export_path,
-        )
+        _seed_table(connection, table, count, request, pk_cache, company_cache, export_path)
 
 
-def _seed_table(
-    connection: sqlite3.Connection,
-    table_info: TableInfo,
-    row_count: int,
-    request: SeederRequest | None,
-    pk_cache: defaultdict[str, list],
-    company_cache: dict[int, str],
-    export_path: str = None,
-) -> None:
+def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count: int, request: SeederRequest | None,
+                pk_cache: defaultdict, company_cache: dict, export_path: str = None) -> None:
     table_context = {"used_pesels": set()}
-
     sql_buffer = []
 
     with tqdm(total=row_count, desc=table_info.name, unit="row") as pbar:
         for _ in range(row_count):
             row_data = {}
-            row_context = {
-                "used_pesels": table_context["used_pesels"],
-                "row_data": row_data,
-                "company_cache": company_cache,
-            }
+            row_context = {"used_pesels": table_context["used_pesels"], "row_data": row_data,
+                           "company_cache": company_cache}
 
             for column in table_info.columns:
                 if column.foreign_key is not None:
-                    row_data[column.name] = resolve_foreign_key(column, pk_cache)
+                    referenced = column.foreign_key.referenced_table
+                    ids = pk_cache.get(referenced) or next(
+                        (pk_cache[k] for k in pk_cache if k.lower() == referenced.lower()), None)
+                    if not ids:
+                        raise RuntimeError(f"Brak danych w cache dla klucza obcego: {referenced}")
+                    row_data[column.name] = random.choice(ids)
                     continue
 
-                override = (
-                    request.column_overrides.get(column.name) if request else None
-                )
-                val = generate_value(column, override, row_context, table_info.name)
-                row_data[column.name] = val
+                override = request.column_overrides.get(column.name) if request else None
+                row_data[column.name] = generate_value(column, override, row_context, table_info.name)
 
-            # Auto-increment PKs produce None; exclude them from the INSERT.
-            filtered = {
-                k: v
-                for k, v in row_data.items()
-                if v is not None and not k.startswith("_")
-            }
+            filtered = {k: v for k, v in row_data.items() if v is not None and not k.startswith("_")}
             cols = ", ".join(filtered.keys())
             placeholders = ", ".join(["?"] * len(filtered))
-            sql = f"INSERT INTO {table_info.name} ({cols}) VALUES ({placeholders})"
+            sql = f"INSERT INTO [{table_info.name}] ({cols}) VALUES ({placeholders})"
             cursor = connection.execute(sql, list(filtered.values()))
 
             if export_path:
-                formatted_vals = []
-                for v in filtered.values():
-                    if v is None:
-                        formatted_vals.append("NULL")
-                    elif isinstance(v, str):
-                        escaped = v.replace("'", "''")
-                        formatted_vals.append(f"'{escaped}'")
-                    elif isinstance(v, bool):
-                        formatted_vals.append("1" if v else "0")
-                    else:
-                        formatted_vals.append(str(v))
+                formatted_vals = ["NULL" if v is None else f"'{str(v).replace('\'', '\'\'')}'" if isinstance(v,
+                                                                                                             str) else "1" if isinstance(
+                    v, bool) and v else "0" if isinstance(v, bool) else str(v) for v in filtered.values()]
+                sql_buffer.append(f"INSERT INTO [{table_info.name}] ({cols}) VALUES ({', '.join(formatted_vals)});")
 
-                vals_str = ", ".join(formatted_vals)
-                raw_sql = f"INSERT INTO {table_info.name} ({cols}) VALUES ({vals_str});"
-                sql_buffer.append(raw_sql)
+            pk_column_name = table_info.columns[0].name
+            inserted_id = filtered.get(pk_column_name, cursor.lastrowid)
+            pk_cache[table_info.name].append(inserted_id)
 
-            # Cache the inserted PK so child tables can reference it.
-            pk_cache[table_info.name].append(cursor.lastrowid)
-            if table_info.name == "Firma":
-                industry = row_data.get("_industry")
-                if industry is not None:
-                    company_cache[cursor.lastrowid] = industry
+            if table_info.name == "Firma" and row_data.get("_industry") is not None:
+                company_cache[cursor.lastrowid] = row_data["_industry"]
 
             pbar.update(1)
+
     if export_path and sql_buffer:
         with open(export_path, "a", encoding="utf-8") as f:
-            f.write(f"\n-- Data for table {table_info.name}\n")
-            f.write("\n".join(sql_buffer) + "\n")
-
-
-def resolve_foreign_key(
-    column: ColumnInfo,
-    pk_cache: defaultdict[str, list],
-) -> object:
-    referenced = column.foreign_key.referenced_table
-    ids = pk_cache.get(referenced)
-    if not ids:
-        raise RuntimeError(
-            f"Cannot resolve FK '{column.name}': "
-            f"no rows seeded yet for '{referenced}'"
-        )
-    return random.choice(ids)
+            f.write(f"\n-- Data for table {table_info.name}\n" + "\n".join(sql_buffer) + "\n")
 
 
 def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
@@ -252,38 +263,3 @@ def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
                     row_counts[parent] = child_count
 
     return row_counts
-
-
-def _export_teryt_table_to_sql(
-    connection: sqlite3.Connection, table_name: str, export_path: str
-) -> None:
-    """Fetches seeded TERYT rows and appends them to the SQL export file."""
-    cursor = connection.cursor()
-
-    cursor.execute(f"PRAGMA table_info([{table_name}])")
-    columns = [row[1] for row in cursor.fetchall()]
-    cols_str = ", ".join([f"[{c}]" for c in columns])
-
-    cursor.execute(f"SELECT * FROM [{table_name}]")
-    rows = cursor.fetchall()
-
-    teryt_buffer = []
-    for row in rows:
-        formatted_vals = []
-        for v in row:
-            if v is None:
-                formatted_vals.append("NULL")
-            elif isinstance(v, str):
-                formatted_vals.append(f"'{v.replace("'", "''")}'")
-            else:
-                formatted_vals.append(str(v))
-
-        vals_str = ", ".join(formatted_vals)
-        teryt_buffer.append(
-            f"INSERT OR IGNORE INTO [{table_name}] ({cols_str}) VALUES ({vals_str});"
-        )
-
-    if teryt_buffer:
-        with open(export_path, "a", encoding="utf-8") as f:
-            f.write(f"\n-- Data for TERYT table {table_name}\n")
-            f.write("\n".join(teryt_buffer) + "\n")
