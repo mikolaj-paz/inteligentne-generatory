@@ -25,6 +25,28 @@ fields = [
 ]
 ```
 
+### Parametryzacja pól
+
+Generator umożliwia nie tylko definiowanie liczby rekordów, ale również szczegółową konfigurację poszczególnych kolumn. Dzięki temu można kontrolować zakresy wartości generowanych danych, np. przedziały lat dla PESEL czy dat zatrudnienia.
+
+Przykładowa konfiguracja:
+
+```toml
+[Osoba]
+rows = 1000
+[Osoba.columns.pesel]
+year_from = 1985
+year_to = 1999
+
+[Zatrudnienie]
+rows = 200
+
+[Zatrudnienie.columns.data_zatrudnienia]
+year_from = 2020
+year_to = 2024
+```
+
+
 ### Realistyczne dane osobowe
 
 Generator potrafi tworzyć:
