@@ -4,7 +4,7 @@ import sqlite3
 from collections import defaultdict
 from tqdm import tqdm
 from seeder.generation.generators import generate_value
-from seeder.models import Schema, Config, SeederRequest, TableInfo
+from seeder.models import Schema, Config, SeederRequest, TableInfo, ColumnInfo
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
@@ -213,12 +213,7 @@ def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count
 
             for column in table_info.columns:
                 if column.foreign_key is not None:
-                    referenced = column.foreign_key.referenced_table
-                    ids = pk_cache.get(referenced) or next(
-                        (pk_cache[k] for k in pk_cache if k.lower() == referenced.lower()), None)
-                    if not ids:
-                        raise RuntimeError(f"Brak danych w cache dla klucza obcego: {referenced}")
-                    row_data[column.name] = random.choice(ids)
+                    row_data[column.name] = resolve_foreign_key(column, pk_cache)
                     continue
 
                 override = request.column_overrides.get(column.name) if request else None
@@ -260,6 +255,18 @@ def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count
         with open(export_path, "a", encoding="utf-8") as f:
             f.write(f"\n-- Data for table {table_info.name}\n" + "\n".join(sql_buffer) + "\n")
 
+def resolve_foreign_key(
+    column: ColumnInfo,
+    pk_cache: defaultdict[str, list],
+) -> object:
+    referenced = column.foreign_key.referenced_table
+    ids = pk_cache.get(referenced)
+    if not ids:
+        raise RuntimeError(
+            f"Cannot resolve FK '{column.name}': "
+            f"no rows seeded yet for '{referenced}'"
+        )
+    return random.choice(ids)
 
 def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
     """Determine how many rows to seed for every table, including auto-deps.
