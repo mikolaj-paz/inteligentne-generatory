@@ -383,7 +383,7 @@ INDUSTRY_PATTERNS = {
 
 POLISH_BANKS = [
     {
-        "nazwa": "Powszechna Kasa Oszczędności Bank Polski SA (w tym Inteligo)",
+        "nazwa": "Powszechna Kasa Oszczędności Bank Polski SA",
         "kod_rozliczeniowy": "1020",
     },
     {"nazwa": "Bank Polska Kasa Opieki SA (Pekao)", "kod_rozliczeniowy": "1240"},
