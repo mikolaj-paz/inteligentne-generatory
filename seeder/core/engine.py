@@ -180,6 +180,7 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
     company_cache = {}
 
     bank_cache = {}
+    birth_date_cache = {}
     global_used_pesels = _fetch_existing_pesels(connection, schema)
     teryt_tables = ["wojewodztwo", "powiat", "gmina", "miejscowosc", "ulica"]
 
@@ -197,18 +198,18 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
         if count == 0:
             continue
         request = explicit.get(table.name)
-        _seed_table(connection, table, count, request, pk_cache, company_cache, bank_cache, global_used_pesels, export_path)
+        _seed_table(connection, table, count, request, pk_cache, company_cache, bank_cache, birth_date_cache, global_used_pesels, export_path)
 
 
 def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count: int, request: SeederRequest | None,
-                pk_cache: defaultdict, company_cache: dict, bank_cache: dict, global_used_pesels: set, export_path: str = None) -> None:
+                pk_cache: defaultdict, company_cache: dict, bank_cache: dict, birth_date_cache: dict, global_used_pesels: set, export_path: str = None) -> None:
     sql_buffer = []
 
     with tqdm(total=row_count, desc=table_info.name, unit="row") as pbar:
         for _ in range(row_count):
             row_data = {}
             row_context = {"used_pesels": global_used_pesels, "row_data": row_data,
-                           "company_cache": company_cache, "bank_cache": bank_cache}
+                           "company_cache": company_cache, "bank_cache": bank_cache, "birth_date_cache": birth_date_cache}
 
             for column in table_info.columns:
                 if column.foreign_key is not None:
@@ -247,8 +248,11 @@ def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count
             if table_info.name == "Firma" and row_data.get("_industry") is not None:
                 company_cache[cursor.lastrowid] = row_data["_industry"]
 
-            if table_info.name.lower() == "bank" and row_data.get("nrb") is not None:
+            if table_info.name == "Bank" and row_data.get("nrb") is not None:
                 bank_cache[inserted_id] = row_data["nrb"]
+
+            if table_info.name == "Osoba" and row_data.get("data_urodzenia") is not None:
+                birth_date_cache[inserted_id] = row_data["data_urodzenia"]
 
             pbar.update(1)
 
