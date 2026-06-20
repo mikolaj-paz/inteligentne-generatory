@@ -27,7 +27,7 @@ fields = [
 
 ### Parametryzacja pól
 
-Generator umożliwia nie tylko definiowanie liczby rekordów, ale również szczegółową konfigurację poszczególnych kolumn. Dzięki temu można kontrolować zakresy wartości generowanych danych, np. przedziały lat dla PESEL czy dat zatrudnienia.
+Generator umożliwia nie tylko definiowanie liczby rekordów, ale również szczegółową konfigurację poszczególnych kolumn. Dzięki temu można kontrolować zakresy wartości generowanych danych, np. zakresy dat dla PESEL czy dat zatrudnienia.
 
 Przykładowa konfiguracja:
 
