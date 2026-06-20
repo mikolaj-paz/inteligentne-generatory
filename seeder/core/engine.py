@@ -18,8 +18,6 @@ def _sort_schema_by_dependencies(schema: Schema) -> list[TableInfo]:
 
 
 def _load_teryt_paths_from_dict(target_count: int) -> list[sqlite3.Row]:
-    if not os.path.exists(DICT_DB_PATH):
-        raise FileNotFoundError(f"Baza dictionary.db nie istnieje w: {DICT_DB_PATH}")
 
     conn = sqlite3.connect(DICT_DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -27,23 +25,28 @@ def _load_teryt_paths_from_dict(target_count: int) -> list[sqlite3.Row]:
 
     cursor.execute("SELECT MAX(id_ulica) FROM Ulica")
     max_id = cursor.fetchone()[0] or 100000
+
     random_ids = random.sample(range(1, max_id + 1), min(target_count * 2, max_id))
 
-    placeholders = ", ".join(["?"] * len(random_ids))
+    cursor.execute("CREATE TEMP TABLE target_ids (id INTEGER)")
+    cursor.executemany("INSERT INTO target_ids VALUES (?)", [(i,) for i in random_ids])
+
     query = f"""
         SELECT 
             w.nazwa AS woj_nazwa, p.nazwa AS pow_nazwa,
             g.nazwa AS gmi_nazwa, m.nazwa AS mie_nazwa, u.nazwa AS uli_nazwa
         FROM Ulica u
+        JOIN target_ids t ON u.id_ulica = t.id
         JOIN Miejscowosc m ON u.id_miejscowosc = m.id_miejscowosc
         JOIN Gmina g       ON m.id_gmina = g.id_gmina
         JOIN Powiat p      ON g.id_powiat = p.id_powiat
         JOIN Wojewodztwo w ON p.id_wojewodztwo = w.id_wojewodztwo
-        WHERE u.id_ulica IN ({placeholders})
         LIMIT ?
     """
-    cursor.execute(query, (*random_ids, target_count))
+    cursor.execute(query, (target_count,))
     rows = cursor.fetchall()
+
+    cursor.execute("DROP TABLE target_ids")
     conn.close()
     return rows
 
@@ -82,7 +85,7 @@ def _fetch_existing_pesels(connection: sqlite3.Connection, schema: Schema) -> se
 
 
 def _seed_teryt_with_strict_mapping(connection: sqlite3.Connection, target_count: int, pk_cache: defaultdict,
-                                    export_path: str | None) -> None:
+                                    export_path: str | None) -> int:
     raw_paths = _load_teryt_paths_from_dict(target_count)
     sql_buffer = []
     cursor = connection.cursor()
@@ -93,6 +96,7 @@ def _seed_teryt_with_strict_mapping(connection: sqlite3.Connection, target_count
     mie_map = _fetch_existing_map(connection, "Miejscowosc", ["id_miejscowosc", "nazwa", "id_gmina"])
     uli_map = _fetch_existing_map(connection, "Ulica", ["id_ulica", "nazwa", "id_miejscowosc"])
 
+    count = 0
     bar_description = "TERYT (województwa, powiaty, gminy, miejscowości, ulice)"
     for path in tqdm(raw_paths, desc=bar_description, unit="row"):
         # 1. WOJEWÓDZTWO
@@ -163,6 +167,7 @@ def _seed_teryt_with_strict_mapping(connection: sqlite3.Connection, target_count
         else:
             uli_id = uli_map[uli_key]
         pk_cache["Ulica"].append(uli_id)
+        count += 1
 
     connection.commit()
 
@@ -172,9 +177,10 @@ def _seed_teryt_with_strict_mapping(connection: sqlite3.Connection, target_count
     if export_path and sql_buffer:
         with open(export_path, "a", encoding="utf-8") as f:
             f.write("\n-- Spójne Dane TERYT \n" + "\n".join(sql_buffer) + "\n")
+    return count
 
 
-def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_path) -> None:
+def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_path) -> int:
     row_counts = _compute_row_counts(schema, config)
     pk_cache = defaultdict(list)
     company_cache = {}
@@ -185,10 +191,12 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
     teryt_tables = ["wojewodztwo", "powiat", "gmina", "miejscowosc", "ulica"]
 
     target_address_count = row_counts.get("Adres", row_counts.get("Ulica", 50))
-    _seed_teryt_with_strict_mapping(connection, target_address_count, pk_cache, export_path)
+    teryt_count = _seed_teryt_with_strict_mapping(connection, target_address_count, pk_cache, export_path)
 
     explicit = {r.table_name: r for r in config}
     sorted_schema = _sort_schema_by_dependencies(schema)
+    row_counts = _compute_row_counts(schema, config)
+    total_generated = teryt_count
 
     for table in sorted_schema:
         if table.name.lower() in teryt_tables:
@@ -198,7 +206,10 @@ def run(connection: sqlite3.Connection, schema: Schema, config: Config, export_p
         if count == 0:
             continue
         request = explicit.get(table.name)
+        total_generated += count
         _seed_table(connection, table, count, request, pk_cache, company_cache, bank_cache, birth_date_cache, global_used_pesels, export_path)
+
+    return total_generated
 
 
 def _seed_table(connection: sqlite3.Connection, table_info: TableInfo, row_count: int, request: SeederRequest | None,

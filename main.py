@@ -1,4 +1,6 @@
 import sys
+import time
+
 import click
 import sqlite3
 
@@ -71,9 +73,14 @@ def main(config_path, db_path, dry_run, export_path) -> None:
             _export_schema_to_sql(export_path, resolved_schema)
         else:
             click.echo("Seeding data...")
-        engine.run(connection, resolved_schema, requests, export_path=export_path)
+        start_time = time.perf_counter()
+        total_rows = engine.run(connection, resolved_schema, requests, export_path=export_path)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        throughput = total_rows / total_time if total_time > 0 else 0
         connection.commit()
-        click.echo("Data seeding completed successfully!")
+        click.echo(f"Data seeding completed successfully in {total_time:.2f} seconds!")
+        click.echo(f"Average throughput: {throughput:.2f} row/s")
 
     except (ValueError, RuntimeError, sqlite3.Error) as e:
         click.echo(f"Error: {e}", err=True)
