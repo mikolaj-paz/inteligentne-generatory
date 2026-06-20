@@ -8,6 +8,8 @@ from seeder.core.connection import get_connection
 from seeder.core.resolver import resolve_tables
 from seeder.core.schema import create_schema
 from seeder.models import Config, Schema
+from setup_db import PATH_DICT_DB, setup_dictionary_database
+import os
 
 
 @click.command()
@@ -36,6 +38,9 @@ from seeder.models import Config, Schema
     help="Path to export the generated data as an SQL script.",
 )
 def main(config_path, db_path, dry_run, export_path) -> None:
+    if not dry_run and not os.path.exists(PATH_DICT_DB):
+        click.echo("Database dictionary.db not found. Generating...")
+        setup_dictionary_database()
     try:
         requests = load_config(config_path)
         resolved_schema = resolve_tables(requests)
