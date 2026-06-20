@@ -305,7 +305,6 @@ def _compute_row_counts(schema: Schema, config: Config) -> dict[str, int]:
         for column in table.columns:
             if column.foreign_key:
                 parent = column.foreign_key.referenced_table
-                if row_counts.get(parent, 0) == 0:
-                    row_counts[parent] = child_count
+                row_counts[parent] = row_counts.get(parent, 0) + child_count
 
     return row_counts
